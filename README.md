@@ -2,7 +2,7 @@
 
 Personal website and blog of **Yuan-Hsiang (Oliver) Huang**, an Information Management student at National Taiwan University interested in operations research, optimization, data science, and software engineering.
 
-Visit the site: [oliverhuang20050304.github.io](https://oliverhuang20050304.github.io)
+Visit the site: [ntumarmot.github.io](https://ntumarmot.github.io)
 
 ## About this site
 
@@ -29,6 +29,6 @@ Pushing to `main` automatically builds and deploys the site through GitHub Actio
 
 ## Contact
 
-- [GitHub](https://github.com/OliverHuang20050304)
+- [GitHub](https://github.com/ntumarmot)
 - [LinkedIn](https://www.linkedin.com/in/oliver-huang-047767331/)
 - [Email](mailto:oliver20050304@gmail.com)

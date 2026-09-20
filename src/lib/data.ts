@@ -7,7 +7,7 @@ export const personalInfo = {
   email: "oliver20050304@gmail.com",
   location: "Taipei, Taiwan",
   phone: "+886-939-966-954",
-  github: "https://github.com/OliverHuang20050304",
+  github: "https://github.com/ntumarmot",
   linkedin: "https://www.linkedin.com/in/oliver-huang-047767331/",
   bio: "A passionate Information Management student at NTU with a strong foundation in optimization, data science, and software engineering. I enjoy solving complex real-world problems through mathematical modeling and algorithmic thinking.",
 };
@@ -153,8 +153,8 @@ export const projects = [
     ],
     tags: ["JavaScript", "HTML", "CSS", "PWA", "localStorage"],
     icon: "📖",
-    github: "https://github.com/OliverHuang20050304/bible-web-app",
-    demo: "https://oliverhuang20050304.github.io/bible-web-app/",
+    github: "https://github.com/ntumarmot/bible-web-app",
+    demo: "https://ntumarmot.github.io/bible-web-app/",
   },
 ];
 
