@@ -1,0 +1,1155 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="大學 AI 社 RAG 技術社課投影片：LLM 知識限制、RAG pipeline、向量檢索與 cosine similarity。">
+  <title>讓 AI 從直接回答到先找資料再回答｜RAG 技術社課投影片</title>
+  <style>
+    :root {
+      --ink:#172033;
+      --muted:#526074;
+      --accent:#2457d6;
+      --accent-dark:#173c8f;
+      --accent-soft:#e8eeff;
+      --blue:#2bc3b5;
+      --blue-pale:#eaf9f7;
+      --line:#ced7e4;
+      --surface:#eef2f7;
+      --white:#ffffff;
+      --code:#e9eef6;
+      --paper:#fcfdff;
+      --paper-deep:#f2f5f9;
+      --olive:#169c8c;
+      --wood:#101c33;
+      --serif:"Iowan Old Style","Noto Serif TC","Songti TC","STSong","PMingLiU",Georgia,serif;
+      --sans:"Avenir Next","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+    }
+    * { box-sizing:border-box; }
+    html,body { margin:0; height:100%; }
+    body { color:var(--ink); background:#e7ecf3; font-family:var(--sans); }
+    button { font:inherit; }
+    .deck { height:100dvh; display:flex; flex-direction:column; align-items:center; }
+    .deck:fullscreen { background:var(--wood); }
+    .viewport { flex:1; min-height:0; width:100%; display:flex; align-items:stretch; justify-content:center; padding:clamp(0px,1.4vw,22px); }
+    .slide {
+      display:none; position:relative; width:min(100%,1360px); height:100%; overflow-y:auto;
+      background:linear-gradient(135deg,#ffffff 0 73%,#f5f8fc 100%);
+      border:1px solid #c8d2df;
+      padding:clamp(32px,4vw,66px) clamp(36px,5vw,82px);
+      box-shadow:0 18px 44px #17203324;
+    }
+    .slide.active { display:flex; flex-direction:column; }
+    .slide > * { flex-shrink:0; }
+    .slide:not(.cover-slide)::before {
+      content:""; position:absolute; top:0; right:0; left:0; width:auto; height:6px;
+      background:linear-gradient(90deg,var(--accent) 0 64%,var(--blue) 64% 88%,#e8793e 88% 100%);
+    }
+    .slide:not(.cover-slide)::after {
+      content:attr(data-slide-number); position:absolute; top:clamp(26px,3vw,46px); right:clamp(32px,4vw,64px);
+      color:var(--accent-dark); font-family:var(--sans); font-size:13px; font-weight:700; letter-spacing:.16em;
+    }
+    .cover-slide {
+      position:relative; isolation:isolate; overflow:hidden; border-color:#c8d2df; color:var(--ink);
+      background:linear-gradient(112deg,#ffffff 0 67%,#eef4ff 67% 100%);
+    }
+    .cover-slide::before {
+      content:"RAG"; position:absolute; z-index:0; right:3%; top:18%; width:36%; height:54%;
+      display:flex; align-items:center; justify-content:center;
+      color:#2457d61f; font-family:var(--sans); font-size:clamp(72px,9vw,138px); font-weight:800; letter-spacing:-.08em;
+    }
+    .cover-slide::after {
+      content:""; position:absolute; z-index:0; right:9%; top:19%; width:26%; height:51%;
+      border:2px solid #2457d636; border-radius:0; transform:rotate(8deg);
+      box-shadow:18px 18px 0 #2bc3b51c,-18px -18px 0 #e8793e12;
+    }
+    .cover-content { width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; position:relative; z-index:1; }
+    .cover-date { width:max-content; padding:7px 13px; border:1px solid #9fb4e9; border-radius:2px; color:var(--accent-dark); background:#f7f9ff; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:clamp(13px,1.05vw,16px); font-weight:700; letter-spacing:.06em; }
+    .cover-heading { width:61%; }
+    .cover-content h1 { max-width:790px; margin:0; font-size:clamp(39px,4.65vw,68px); line-height:1.2; font-weight:700; letter-spacing:-.035em; }
+    .cover-title-main { display:block; }
+    .cover-title-main + .cover-title-main { margin-top:8px; }
+    .cover-divider { width:100%; height:5px; margin-top:28px; border-radius:0; background:linear-gradient(to right,var(--accent) 0 46%,var(--blue) 46% 72%,#e8793e 72% 84%,transparent 84% 100%); }
+    .cover-title-sub { margin-top:23px; color:#344258; font-size:clamp(21px,2.05vw,30px); line-height:1.4; font-weight:600; letter-spacing:-.015em; }
+    .cover-author { width:61%; display:flex; flex-direction:column; align-items:flex-start; gap:7px; padding-top:17px; border-top:1px solid #b9c5d5; color:#425168; }
+    .cover-author-line { display:flex; align-items:baseline; gap:20px; font-size:clamp(17px,1.4vw,21px); }
+    .cover-author-line strong { color:var(--ink); }
+    .cover-credentials { margin:0; color:var(--muted); font-family:var(--sans); font-size:clamp(14px,1.05vw,16px); line-height:1.5; }
+    .cover-qr {
+      position:absolute; right:3.5%; bottom:3%; display:flex; flex-direction:column; align-items:center; gap:8px;
+      color:var(--accent-dark); text-decoration:none; font-family:var(--sans); font-size:clamp(13px,1vw,15px); font-weight:700;
+    }
+    .cover-qr img {
+      display:block; width:clamp(138px,13vw,188px); aspect-ratio:1; padding:10px;
+      background:#ffffff; border:1px solid #9fb4e9; box-shadow:0 8px 20px #1720331f;
+    }
+    .cover-qr span { padding:4px 8px; background:#f7f9ffdc; }
+    .chapter-slide {
+      color:#ffffff; background:linear-gradient(118deg,#112744 0 69%,#19385f 69% 100%);
+      border-color:#112744; overflow:hidden;
+      justify-content:center;
+    }
+    .chapter-slide::before { width:12px; height:auto; }
+    .slide.chapter-slide::after { color:#d9e5f7a8; }
+    .chapter-slide .chapter-content::after {
+      content:""; position:absolute; left:0; top:-34px; width:86px; height:2px;
+      background:var(--blue); box-shadow:105px 0 0 #e8793e;
+    }
+    .chapter-content { position:relative; z-index:1; max-width:980px; }
+    .chapter-kicker {
+      width:max-content; margin-bottom:25px; padding:7px 13px;
+      border:1px solid #85a9da; border-radius:2px; background:#ffffff0f;
+      color:#dce9fa; font-family:var(--sans); font-size:clamp(13px,1.05vw,16px); font-weight:700; letter-spacing:.14em;
+    }
+    .chapter-index {
+      display:block; color:#ffffff17; font-family:var(--sans); font-size:clamp(72px,9vw,132px);
+      line-height:.78; font-weight:800; letter-spacing:-.07em; -webkit-text-stroke:1px #ffffff52;
+    }
+    .chapter-slide h2 { max-width:1000px; margin-top:27px; color:#ffffff; font-size:clamp(42px,5vw,74px); line-height:1.12; }
+    .chapter-lead { max-width:43em; margin-top:24px; color:#d6e2f3; font-size:clamp(19px,1.65vw,25px); line-height:1.55; }
+    .chapter-topics { display:flex; flex-wrap:wrap; gap:10px; margin-top:31px; }
+    .chapter-topics span {
+      padding:8px 13px; border:1px solid #7594bb; border-radius:2px;
+      background:#ffffff0d; color:#eef5ff; font-family:var(--sans); font-size:clamp(14px,1.08vw,17px); font-weight:650;
+    }
+    .slide-header { padding-bottom:13px; border-bottom:1px solid var(--line); margin-bottom:21px; padding-right:70px; }
+    .section-label { width:max-content; color:var(--accent-dark); background:transparent; border:0; border-bottom:2px solid var(--blue); border-radius:0; padding:2px 0 5px; display:inline-flex; align-items:center; font-family:var(--sans); font-size:clamp(12px,1vw,14px); font-weight:750; letter-spacing:.09em; }
+    .section-label::before { display:none; }
+    h1,h2,h3,p,figure { margin:0; }
+    h1 { font-size:clamp(30px,3vw,44px); line-height:1.25; margin-top:8px; letter-spacing:-.02em; text-wrap:balance; }
+    h2 { max-width:1100px; font-size:clamp(30px,3vw,43px); line-height:1.2; margin-top:12px; font-weight:800; letter-spacing:-.035em; text-wrap:balance; }
+    h3 { font-size:clamp(21px,1.72vw,26px); line-height:1.4; margin-bottom:10px; font-weight:700; }
+    p, li { font-size:clamp(18px,1.5vw,22px); line-height:1.66; }
+    p + p { margin-top:13px; }
+    .lead { font-size:clamp(20px,1.68vw,25px); line-height:1.55; max-width:52em; }
+    .small { font-size:clamp(15px,1.12vw,17px); color:var(--muted); line-height:1.5; }
+    .muted { color:var(--muted); }
+    .accent { color:var(--accent); }
+    strong { font-weight:700; }
+    .slide-body { display:flex; flex-direction:column; gap:18px; min-height:0; }
+    .two-col { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:clamp(22px,3vw,48px); align-items:start; }
+    .two-col.narrow-wide { grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); }
+    .v-stack { display:grid; gap:14px; }
+    .rule-block { padding-top:13px; border-top:3px solid var(--accent); }
+    .rule-block p + p { margin-top:9px; }
+    .note, .definition {
+      border-left:4px solid var(--accent); background:#f3f6ff; border-radius:0 8px 8px 0;
+      padding:14px 18px; font-size:clamp(16px,1.25vw,19px); line-height:1.55;
+    }
+    .note { border-color:var(--blue); background:#eefaf8; }
+    .note p, .definition p { font-size:inherit; }
+    .box-label { color:var(--accent); font-size:13px; font-weight:700; letter-spacing:.04em; display:block; margin-bottom:4px; }
+    .note .box-label { color:var(--muted); }
+    .figure { background:#ffffff; border:1px solid #cbd6e4; padding:17px 21px; border-radius:8px; box-shadow:0 5px 14px #22324d0d; }
+    figcaption { color:var(--muted); font-size:clamp(13px,1.04vw,16px); line-height:1.45; margin-top:8px; }
+    .figure-title { color:var(--muted); font-size:14px; font-weight:700; display:block; margin-bottom:13px; }
+    .flow-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .flow-col { display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
+    .flow-col .down { margin-left:18px; }
+    .node { display:inline-block; border:1px solid #9db4dc; background:#f7f9ff; padding:8px 13px; border-radius:6px; font-size:clamp(15px,1.16vw,18px); line-height:1.35; font-weight:700; box-shadow:0 3px 8px #22324d0b; }
+    .arrow,.down { color:var(--accent); font-size:22px; font-weight:700; line-height:1; }
+    .comparison { display:grid; gap:17px; }
+    .comparison .figure-title { margin-bottom:6px; }
+    .stage-figure { display:grid; grid-template-columns:1fr 1fr; gap:26px; }
+    .stage-figure .flow-col .node { min-width:210px; }
+    .stage-figure .stage-label { color:var(--accent); font-weight:700; font-size:17px; margin-bottom:11px; }
+    .integration-slide .stage-label { margin-bottom:4px; }
+    .integration-slide .example-question { margin:0 0 12px; color:var(--ink); font-size:clamp(16px,1.2vw,18px); line-height:1.4; font-weight:650; }
+    .stage-figure > div + div { border-left:1px solid #cad5e3; padding-left:26px; }
+    .stage-figure .bridge { margin-top:12px; border-top:1px solid var(--line); padding-top:10px; color:var(--muted); font-size:14px; }
+    .compact-pipeline .flow-col { gap:3px; }
+    .compact-pipeline .node { padding:5px 10px; font-size:clamp(14px,1.04vw,16px); }
+    .compact-pipeline .down { font-size:17px; }
+    .compact-pipeline .stage-label { margin-bottom:7px; }
+    .compact-pipeline .bridge { margin-top:5px; padding-top:6px; }
+    .table-wrap { overflow-x:auto; background:#ffffff; border:1px solid #cbd6e4; border-radius:8px; padding:4px 17px; box-shadow:0 5px 14px #22324d0b; }
+    table { width:100%; border-collapse:collapse; font-size:clamp(15px,1.14vw,17px); line-height:1.5; }
+    th,td { text-align:left; vertical-align:top; padding:10px 13px 10px 0; border-bottom:1px solid var(--line); }
+    th { color:var(--accent-dark); font-family:var(--sans); font-size:14px; border-bottom:2px solid var(--accent); }
+    td:first-child { font-weight:650; }
+    .agenda-link { color:var(--accent-dark); font-weight:750; text-decoration:none; border-bottom:1px solid #9fb4e9; }
+    .agenda-link::after { content:" →"; color:var(--blue); }
+    .agenda-link:hover,.agenda-link:focus-visible { color:var(--accent); border-bottom-color:var(--accent); outline:none; }
+    code,pre { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Noto Sans Mono CJK TC",monospace; }
+    :not(pre)>code { background:var(--code); color:#173c8f; padding:1px 5px; border-radius:4px; font-size:.9em; }
+    pre { overflow-x:auto; margin:0; padding:18px 21px; background:#101827; color:#eef5ff; border:1px solid #263957; border-left:6px solid var(--blue); border-radius:8px; box-shadow:0 8px 18px #10203a1c; font-size:clamp(15px,1.22vw,18px); line-height:1.57; }
+    .generation-slide pre { padding-top:12px; padding-bottom:12px; line-height:1.45; }
+    .generation-slide .slide-body { gap:14px; }
+    .generation-slide .takeaway { padding-top:12px; }
+    pre code { background:none; padding:0; }
+    .token-comment { color:#91a4bd; font-style:italic; }
+    .token-string { color:#a7d89b; }
+    .token-keyword { color:#ffb86b; font-weight:700; }
+    .token-builtin { color:#c4b5fd; }
+    .token-number { color:#f5d36b; }
+    .token-function { color:#65d5c7; }
+    .token-operator { color:#93c5fd; }
+    .math { font-family:Georgia,"Times New Roman",serif; font-size:clamp(27px,2.45vw,36px); white-space:nowrap; }
+    .fraction { display:inline-flex; flex-direction:column; text-align:center; line-height:1.2; vertical-align:middle; }
+    .fraction span:first-child { border-bottom:1.5px solid currentColor; padding:0 9px 4px; }
+    .fraction span:last-child { padding:4px 9px 0; }
+    .plot { width:min(100%,500px); height:auto; display:block; margin:0 auto; }
+    .plot text { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:15px; fill:var(--ink); }
+    .plot .axis { stroke:#7d8ca1; }
+    .plot .grid { stroke:#cbd5e1; stroke-dasharray:4 5; }
+    .plot .primary { stroke:var(--accent); stroke-width:2.5; fill:var(--accent); }
+    .plot .secondary { stroke:var(--olive); stroke-width:2.5; fill:var(--olive); }
+    .takeaway { margin-top:auto; padding-top:18px; border-top:1px solid var(--line); font-size:clamp(16px,1.25vw,19px); line-height:1.5; color:var(--muted); }
+    .takeaway b { color:var(--accent); }
+    .controls {
+      width:100%; height:58px; flex:none; display:flex; align-items:center; justify-content:space-between;
+      gap:16px; padding:0 clamp(16px,3vw,42px); background:#101c33; border-top:1px solid #304668;
+    }
+    .controls .group { display:flex; align-items:center; gap:12px; }
+    .controls button { border:1px solid #4f6b94; background:#182b49; color:#f5f9ff; border-radius:6px; min-width:44px; height:44px; cursor:pointer; transition:background .16s ease,border-color .16s ease,color .16s ease; }
+    .controls .fullscreen-button { padding:0 13px; min-width:96px; white-space:nowrap; }
+    .controls button:hover,.controls button:focus-visible { border-color:#65d5c7; background:#213b62; color:#fff; outline:2px solid #65d5c7; outline-offset:2px; }
+    .controls button:disabled { opacity:.35; cursor:default; }
+    #counter { color:#f2f7ff; font-family:var(--sans); font-size:14px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .controls .small { color:#b9c9df; font-family:var(--sans); }
+    .progress {
+      position:relative; z-index:20; width:100%; height:30px; flex:none;
+      background:#101c33; border-top:1px solid #304668;
+    }
+    .progress-rail {
+      position:absolute; left:18px; right:18px; top:14px; height:3px;
+      overflow:hidden; border-radius:99px; background:#304668;
+    }
+    .progress-rail span { display:block; height:100%; width:0; background:var(--blue); transition:width .18s ease; }
+    .slide-dots { position:absolute; inset:0 12px; display:flex; align-items:stretch; }
+    .slide-dot {
+      position:relative; flex:1 1 0; min-width:0; margin:0; padding:0;
+      border:0; background:transparent; cursor:pointer;
+    }
+    .slide-dot::before {
+      content:""; position:absolute; left:50%; top:50%; width:7px; height:7px;
+      border:1.5px solid #7891b3; border-radius:50%; background:#182b49;
+      transform:translate(-50%,-50%); transition:width .12s ease,height .12s ease,background .12s ease,border-color .12s ease;
+    }
+    .slide-dot.is-past::before { border-color:var(--blue); background:var(--blue); }
+    .slide-dot.is-current::before {
+      width:12px; height:12px; border-color:#ffffff; background:var(--blue);
+      box-shadow:0 0 0 3px #2bc3b54d;
+    }
+    .slide-tooltip {
+      position:absolute; left:50%; bottom:calc(100% + 7px); z-index:30;
+      width:max-content; max-width:min(320px,72vw); padding:7px 10px; border:1px solid #4f6b94;
+      border-radius:6px; background:#101c33; color:#f5f9ff; box-shadow:0 8px 22px #0712224d;
+      font-size:13px; font-weight:700; line-height:1.4; white-space:normal; text-align:left;
+      opacity:0; pointer-events:none; transform:translate(-50%,5px); transition:opacity .12s ease,transform .12s ease;
+    }
+    .slide-tooltip::after {
+      content:""; position:absolute; left:var(--arrow-x,50%); bottom:-6px;
+      width:10px; height:10px; border-right:1px solid #4f6b94; border-bottom:1px solid #4f6b94;
+      background:#101c33; transform:translateX(-50%) rotate(45deg);
+    }
+    .slide-tooltip.is-visible { opacity:1; transform:translate(-50%,0); }
+    .slide-dot:focus-visible { outline:2px solid #65d5c7; outline-offset:-3px; border-radius:5px; }
+    @media (prefers-reduced-motion:reduce) {
+      *,*::before,*::after { scroll-behavior:auto !important; transition-duration:.01ms !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; }
+    }
+    .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+    @media (max-width:850px) {
+      .viewport { padding:0; }
+      .slide { padding:25px 23px; border:0; box-shadow:none; }
+      .two-col,.two-col.narrow-wide,.stage-figure { grid-template-columns:1fr; }
+      .stage-figure > div + div { border-left:0; border-top:1px solid #cad5e3; padding-left:0; padding-top:15px; }
+      .slide-body { gap:15px; }
+      .slide-header { margin-bottom:15px; }
+      .figure { padding:13px; }
+      .cover-slide { background:var(--white); }
+      .cover-slide::before { display:none; }
+      .cover-heading,.cover-author { width:100%; }
+      .cover-content h1 { font-size:clamp(26px,6.6vw,52px); }
+      .cover-title-sub { font-size:clamp(19px,4.6vw,30px); }
+      .cover-divider { margin-top:20px; }
+      .cover-author-line { flex-wrap:wrap; gap:5px 13px; }
+      .cover-content { height:auto; gap:28px; }
+      .cover-qr { position:static; align-self:flex-end; margin-top:2px; }
+      .cover-qr img { width:128px; }
+      .control-hint { display:none; }
+    }
+    @media screen and (max-height:820px) and (min-width:851px) {
+      .viewport { padding:8px 14px; }
+      .slide { padding:24px 48px; }
+      .slide-header { margin-bottom:11px; padding-bottom:8px; }
+      .section-label { padding:4px 9px; font-size:12px; }
+      h2 { margin-top:8px; font-size:35px; }
+      h3 { margin-bottom:6px; font-size:20px; }
+      p,li { font-size:18px; line-height:1.46; }
+      .lead { font-size:20px; line-height:1.43; }
+      .small { font-size:15px; line-height:1.38; }
+      .slide-body { gap:8px; }
+      .two-col { gap:25px; }
+      .v-stack { gap:9px; }
+      .rule-block { padding-top:8px; }
+      .rule-block p + p { margin-top:5px; }
+      .note,.definition { padding:10px 14px; font-size:16px; line-height:1.45; }
+      .figure { padding:11px 15px; }
+      .figure-title { margin-bottom:8px; }
+      figcaption { margin-top:5px; font-size:13px; line-height:1.35; }
+      .table-wrap { padding:2px 13px; }
+      th,td { padding:6px 10px 6px 0; line-height:1.4; }
+      pre { padding:11px 15px; font-size:15px; line-height:1.4; }
+      .takeaway { padding-top:10px; font-size:16px; line-height:1.42; }
+      .chapter-slide { padding:38px 70px; }
+    }
+    @media print {
+      @page { size:16in 9in; margin:0; }
+      html,body { height:auto; background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      .deck,.viewport { display:block; height:auto; padding:0; }
+      .slide,.slide.active { display:flex; width:16in; height:9in; min-height:0; overflow:hidden; border:0; box-shadow:none; page-break-after:always; break-after:page; padding:55px 72px; }
+      .controls,.progress { display:none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <main class="viewport" aria-label="RAG 技術社課投影片">
+      <section class="slide cover-slide active" data-minutes="0" aria-label="課程首頁">
+        <div class="cover-content">
+          <p class="cover-date">10/19(Mon.) 19-21</p>
+          <div class="cover-heading">
+            <h1><span class="cover-title-main">讓 AI 從「直接回答」</span><span class="cover-title-main">到「先找資料再回答」</span></h1>
+            <div class="cover-divider" aria-hidden="true"></div>
+            <p class="cover-title-sub">從零打造 AI Agent｜RAG：文件檢索與回答</p>
+          </div>
+          <div class="cover-author">
+            <p class="cover-author-line"><strong>黃元翔</strong><span>NTU IM B12</span></p>
+            <p class="cover-credentials">Former FinTech Intern @ TABF</p>
+          </div>
+          <a class="cover-qr" href="https://drive.google.com/drive/folders/1RSalWlJEthEA5NVBHSgG7BPcECnMgQdI" target="_blank" rel="noopener noreferrer" aria-label="開啟課程檔案 Google Drive">
+            <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0nMS4wJyBlbmNvZGluZz0nVVRGLTgnPz4KPHN2ZyB3aWR0aD0iNDVtbSIgaGVpZ2h0PSI0NW1tIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCA0NSA0NSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNCw0SDVWNUg0ek01LDRINlY1SDV6TTYsNEg3VjVINnpNNyw0SDhWNUg3ek04LDRIOVY1SDh6TTksNEgxMFY1SDl6TTEwLDRIMTFWNUgxMHpNMTIsNEgxM1Y1SDEyek0xMyw0SDE0VjVIMTN6TTE0LDRIMTVWNUgxNHpNMjMsNEgyNFY1SDIzek0yNCw0SDI1VjVIMjR6TTI2LDRIMjdWNUgyNnpNMjcsNEgyOFY1SDI3ek0zMCw0SDMxVjVIMzB6TTM0LDRIMzVWNUgzNHpNMzUsNEgzNlY1SDM1ek0zNiw0SDM3VjVIMzZ6TTM3LDRIMzhWNUgzN3pNMzgsNEgzOVY1SDM4ek0zOSw0SDQwVjVIMzl6TTQwLDRINDFWNUg0MHpNNCw1SDVWNkg0ek0xMCw1SDExVjZIMTB6TTEyLDVIMTNWNkgxMnpNMTMsNUgxNFY2SDEzek0xNCw1SDE1VjZIMTR6TTE1LDVIMTZWNkgxNXpNMTcsNUgxOFY2SDE3ek0yMyw1SDI0VjZIMjN6TTI1LDVIMjZWNkgyNXpNMjYsNUgyN1Y2SDI2ek0yOCw1SDI5VjZIMjh6TTMyLDVIMzNWNkgzMnpNMzQsNUgzNVY2SDM0ek00MCw1SDQxVjZINDB6TTQsNkg1VjdINHpNNiw2SDdWN0g2ek03LDZIOFY3SDd6TTgsNkg5VjdIOHpNMTAsNkgxMVY3SDEwek0xMiw2SDEzVjdIMTJ6TTEzLDZIMTRWN0gxM3pNMTgsNkgxOVY3SDE4ek0yMCw2SDIxVjdIMjB6TTIyLDZIMjNWN0gyMnpNMjMsNkgyNFY3SDIzek0yNSw2SDI2VjdIMjV6TTI3LDZIMjhWN0gyN3pNMjksNkgzMFY3SDI5ek0zMCw2SDMxVjdIMzB6TTMyLDZIMzNWN0gzMnpNMzQsNkgzNVY3SDM0ek0zNiw2SDM3VjdIMzZ6TTM3LDZIMzhWN0gzN3pNMzgsNkgzOVY3SDM4ek00MCw2SDQxVjdINDB6TTQsN0g1VjhINHpNNiw3SDdWOEg2ek03LDdIOFY4SDd6TTgsN0g5VjhIOHpNMTAsN0gxMVY4SDEwek0xMyw3SDE0VjhIMTN6TTE4LDdIMTlWOEgxOHpNMTksN0gyMFY4SDE5ek0yMSw3SDIyVjhIMjF6TTI0LDdIMjVWOEgyNHpNMjUsN0gyNlY4SDI1ek0yNyw3SDI4VjhIMjd6TTI4LDdIMjlWOEgyOHpNMjksN0gzMFY4SDI5ek0zMiw3SDMzVjhIMzJ6TTM0LDdIMzVWOEgzNHpNMzYsN0gzN1Y4SDM2ek0zNyw3SDM4VjhIMzd6TTM4LDdIMzlWOEgzOHpNNDAsN0g0MVY4SDQwek00LDhINVY5SDR6TTYsOEg3VjlINnpNNyw4SDhWOUg3ek04LDhIOVY5SDh6TTEwLDhIMTFWOUgxMHpNMTIsOEgxM1Y5SDEyek0xMyw4SDE0VjlIMTN6TTE0LDhIMTVWOUgxNHpNMTUsOEgxNlY5SDE1ek0xNyw4SDE4VjlIMTd6TTE4LDhIMTlWOUgxOHpNMjAsOEgyMVY5SDIwek0yMiw4SDIzVjlIMjJ6TTIzLDhIMjRWOUgyM3pNMjgsOEgyOVY5SDI4ek0zMCw4SDMxVjlIMzB6TTMyLDhIMzNWOUgzMnpNMzQsOEgzNVY5SDM0ek0zNiw4SDM3VjlIMzZ6TTM3LDhIMzhWOUgzN3pNMzgsOEgzOVY5SDM4ek00MCw4SDQxVjlINDB6TTQsOUg1VjEwSDR6TTEwLDlIMTFWMTBIMTB6TTEzLDlIMTRWMTBIMTN6TTE0LDlIMTVWMTBIMTR6TTE2LDlIMTdWMTBIMTZ6TTE3LDlIMThWMTBIMTd6TTE4LDlIMTlWMTBIMTh6TTE5LDlIMjBWMTBIMTl6TTIwLDlIMjFWMTBIMjB6TTI0LDlIMjVWMTBIMjR6TTI3LDlIMjhWMTBIMjd6TTI5LDlIMzBWMTBIMjl6TTMwLDlIMzFWMTBIMzB6TTM0LDlIMzVWMTBIMzR6TTQwLDlINDFWMTBINDB6TTQsMTBINVYxMUg0ek01LDEwSDZWMTFINXpNNiwxMEg3VjExSDZ6TTcsMTBIOFYxMUg3ek04LDEwSDlWMTFIOHpNOSwxMEgxMFYxMUg5ek0xMCwxMEgxMVYxMUgxMHpNMTIsMTBIMTNWMTFIMTJ6TTE0LDEwSDE1VjExSDE0ek0xNiwxMEgxN1YxMUgxNnpNMTgsMTBIMTlWMTFIMTh6TTIwLDEwSDIxVjExSDIwek0yMiwxMEgyM1YxMUgyMnpNMjQsMTBIMjVWMTFIMjR6TTI2LDEwSDI3VjExSDI2ek0yOCwxMEgyOVYxMUgyOHpNMzAsMTBIMzFWMTFIMzB6TTMyLDEwSDMzVjExSDMyek0zNCwxMEgzNVYxMUgzNHpNMzUsMTBIMzZWMTFIMzV6TTM2LDEwSDM3VjExSDM2ek0zNywxMEgzOFYxMUgzN3pNMzgsMTBIMzlWMTFIMzh6TTM5LDEwSDQwVjExSDM5ek00MCwxMEg0MVYxMUg0MHpNMTMsMTFIMTRWMTJIMTN6TTE2LDExSDE3VjEySDE2ek0xNywxMUgxOFYxMkgxN3pNMTgsMTFIMTlWMTJIMTh6TTE5LDExSDIwVjEySDE5ek0yMSwxMUgyMlYxMkgyMXpNMjIsMTFIMjNWMTJIMjJ6TTI2LDExSDI3VjEySDI2ek0yOSwxMUgzMFYxMkgyOXpNMzEsMTFIMzJWMTJIMzF6TTMyLDExSDMzVjEySDMyek00LDEySDVWMTNINHpNNywxMkg4VjEzSDd6TTgsMTJIOVYxM0g4ek05LDEySDEwVjEzSDl6TTEwLDEySDExVjEzSDEwek0xMSwxMkgxMlYxM0gxMXpNMTIsMTJIMTNWMTNIMTJ6TTE1LDEySDE2VjEzSDE1ek0xOCwxMkgxOVYxM0gxOHpNMTksMTJIMjBWMTNIMTl6TTI3LDEySDI4VjEzSDI3ek0yOCwxMkgyOVYxM0gyOHpNMjksMTJIMzBWMTNIMjl6TTMwLDEySDMxVjEzSDMwek0zMSwxMkgzMlYxM0gzMXpNMzMsMTJIMzRWMTNIMzN6TTM2LDEySDM3VjEzSDM2ek0zOCwxMkgzOVYxM0gzOHpNMzksMTJINDBWMTNIMzl6TTQwLDEySDQxVjEzSDQwek00LDEzSDVWMTRINHpNNSwxM0g2VjE0SDV6TTYsMTNIN1YxNEg2ek03LDEzSDhWMTRIN3pNOSwxM0gxMFYxNEg5ek0xMSwxM0gxMlYxNEgxMXpNMTIsMTNIMTNWMTRIMTJ6TTE3LDEzSDE4VjE0SDE3ek0yMCwxM0gyMVYxNEgyMHpNMjIsMTNIMjNWMTRIMjJ6TTI2LDEzSDI3VjE0SDI2ek0yNywxM0gyOFYxNEgyN3pNMjksMTNIMzBWMTRIMjl6TTMwLDEzSDMxVjE0SDMwek0zNCwxM0gzNVYxNEgzNHpNMzUsMTNIMzZWMTRIMzV6TTM2LDEzSDM3VjE0SDM2ek0zNywxM0gzOFYxNEgzN3pNMzgsMTNIMzlWMTRIMzh6TTM5LDEzSDQwVjE0SDM5ek04LDE0SDlWMTVIOHpNOSwxNEgxMFYxNUg5ek0xMCwxNEgxMVYxNUgxMHpNMTEsMTRIMTJWMTVIMTF6TTEyLDE0SDEzVjE1SDEyek0xNCwxNEgxNVYxNUgxNHpNMTYsMTRIMTdWMTVIMTZ6TTE5LDE0SDIwVjE1SDE5ek0yMCwxNEgyMVYxNUgyMHpNMjEsMTRIMjJWMTVIMjF6TTIzLDE0SDI0VjE1SDIzek0yNCwxNEgyNVYxNUgyNHpNMjUsMTRIMjZWMTVIMjV6TTI2LDE0SDI3VjE1SDI2ek0yNywxNEgyOFYxNUgyN3pNMjksMTRIMzBWMTVIMjl6TTMxLDE0SDMyVjE1SDMxek0zNCwxNEgzNVYxNUgzNHpNMzUsMTRIMzZWMTVIMzV6TTM2LDE0SDM3VjE1SDM2ek0zOCwxNEgzOVYxNUgzOHpNNDAsMTRINDFWMTVINDB6TTQsMTVINVYxNkg0ek03LDE1SDhWMTZIN3pNOCwxNUg5VjE2SDh6TTExLDE1SDEyVjE2SDExek0xNSwxNUgxNlYxNkgxNXpNMjAsMTVIMjFWMTZIMjB6TTIxLDE1SDIyVjE2SDIxek0yMiwxNUgyM1YxNkgyMnpNMjMsMTVIMjRWMTZIMjN6TTI0LDE1SDI1VjE2SDI0ek0yNiwxNUgyN1YxNkgyNnpNMjgsMTVIMjlWMTZIMjh6TTMwLDE1SDMxVjE2SDMwek0zMiwxNUgzM1YxNkgzMnpNMzMsMTVIMzRWMTZIMzN6TTM0LDE1SDM1VjE2SDM0ek0zNSwxNUgzNlYxNkgzNXpNMzcsMTVIMzhWMTZIMzd6TTM4LDE1SDM5VjE2SDM4ek0zOSwxNUg0MFYxNkgzOXpNNDAsMTVINDFWMTZINDB6TTQsMTZINVYxN0g0ek02LDE2SDdWMTdINnpNNywxNkg4VjE3SDd6TTksMTZIMTBWMTdIOXpNMTAsMTZIMTFWMTdIMTB6TTExLDE2SDEyVjE3SDExek0xMiwxNkgxM1YxN0gxMnpNMTMsMTZIMTRWMTdIMTN6TTE1LDE2SDE2VjE3SDE1ek0xNiwxNkgxN1YxN0gxNnpNMTcsMTZIMThWMTdIMTd6TTE5LDE2SDIwVjE3SDE5ek0yNCwxNkgyNVYxN0gyNHpNMjcsMTZIMjhWMTdIMjd6TTI4LDE2SDI5VjE3SDI4ek0zMiwxNkgzM1YxN0gzMnpNMzQsMTZIMzVWMTdIMzR6TTM1LDE2SDM2VjE3SDM1ek0zNywxNkgzOFYxN0gzN3pNNDAsMTZINDFWMTdINDB6TTQsMTdINVYxOEg0ek04LDE3SDlWMThIOHpNOSwxN0gxMFYxOEg5ek0xNiwxN0gxN1YxOEgxNnpNMjAsMTdIMjFWMThIMjB6TTIyLDE3SDIzVjE4SDIyek0yNiwxN0gyN1YxOEgyNnpNMjcsMTdIMjhWMThIMjd6TTI5LDE3SDMwVjE4SDI5ek0zMCwxN0gzMVYxOEgzMHpNMzEsMTdIMzJWMThIMzF6TTMyLDE3SDMzVjE4SDMyek0zMywxN0gzNFYxOEgzM3pNMzYsMTdIMzdWMThIMzZ6TTM3LDE3SDM4VjE4SDM3ek0zOSwxN0g0MFYxOEgzOXpNNDAsMTdINDFWMThINDB6TTQsMThINVYxOUg0ek03LDE4SDhWMTlIN3pNOSwxOEgxMFYxOUg5ek0xMCwxOEgxMVYxOUgxMHpNMTEsMThIMTJWMTlIMTF6TTEyLDE4SDEzVjE5SDEyek0xMywxOEgxNFYxOUgxM3pNMTQsMThIMTVWMTlIMTR6TTE1LDE4SDE2VjE5SDE1ek0xNiwxOEgxN1YxOUgxNnpNMTgsMThIMTlWMTlIMTh6TTE5LDE4SDIwVjE5SDE5ek0yMCwxOEgyMVYxOUgyMHpNMjIsMThIMjNWMTlIMjJ6TTIzLDE4SDI0VjE5SDIzek0zMCwxOEgzMVYxOUgzMHpNMzEsMThIMzJWMTlIMzF6TTMyLDE4SDMzVjE5SDMyek0zNCwxOEgzNVYxOUgzNHpNMzYsMThIMzdWMTlIMzZ6TTM3LDE4SDM4VjE5SDM3ek0zOCwxOEgzOVYxOUgzOHpNMzksMThINDBWMTlIMzl6TTQwLDE4SDQxVjE5SDQwek00LDE5SDVWMjBINHpNNSwxOUg2VjIwSDV6TTYsMTlIN1YyMEg2ek03LDE5SDhWMjBIN3pNOSwxOUgxMFYyMEg5ek0xMSwxOUgxMlYyMEgxMXpNMTMsMTlIMTRWMjBIMTN6TTE2LDE5SDE3VjIwSDE2ek0xNywxOUgxOFYyMEgxN3pNMTgsMTlIMTlWMjBIMTh6TTE5LDE5SDIwVjIwSDE5ek0yMCwxOUgyMVYyMEgyMHpNMjMsMTlIMjRWMjBIMjN6TTI3LDE5SDI4VjIwSDI3ek0zMSwxOUgzMlYyMEgzMXpNMzMsMTlIMzRWMjBIMzN6TTM0LDE5SDM1VjIwSDM0ek0zNSwxOUgzNlYyMEgzNXpNMzcsMTlIMzhWMjBIMzd6TTM4LDE5SDM5VjIwSDM4ek00MCwxOUg0MVYyMEg0MHpNNCwyMEg1VjIxSDR6TTUsMjBINlYyMUg1ek02LDIwSDdWMjFINnpNOCwyMEg5VjIxSDh6TTEwLDIwSDExVjIxSDEwek0xOCwyMEgxOVYyMUgxOHpNMTksMjBIMjBWMjFIMTl6TTIxLDIwSDIyVjIxSDIxek0yMiwyMEgyM1YyMUgyMnpNMjUsMjBIMjZWMjFIMjV6TTI2LDIwSDI3VjIxSDI2ek0yOCwyMEgyOVYyMUgyOHpNMjksMjBIMzBWMjFIMjl6TTMwLDIwSDMxVjIxSDMwek0zMywyMEgzNFYyMUgzM3pNMzQsMjBIMzVWMjFIMzR6TTM2LDIwSDM3VjIxSDM2ek0zOCwyMEgzOVYyMUgzOHpNNCwyMUg1VjIySDR6TTE2LDIxSDE3VjIySDE2ek0yMSwyMUgyMlYyMkgyMXpNMjcsMjFIMjhWMjJIMjd6TTMwLDIxSDMxVjIySDMwek0zNSwyMUgzNlYyMkgzNXpNMzcsMjFIMzhWMjJIMzd6TTQsMjJINVYyM0g0ek01LDIySDZWMjNINXpNOCwyMkg5VjIzSDh6TTEwLDIySDExVjIzSDEwek0xMSwyMkgxMlYyM0gxMXpNMTUsMjJIMTZWMjNIMTV6TTE4LDIySDE5VjIzSDE4ek0yMCwyMkgyMVYyM0gyMHpNMjEsMjJIMjJWMjNIMjF6TTIzLDIySDI0VjIzSDIzek0yNiwyMkgyN1YyM0gyNnpNMjcsMjJIMjhWMjNIMjd6TTMxLDIySDMyVjIzSDMxek0zMiwyMkgzM1YyM0gzMnpNMzMsMjJIMzRWMjNIMzN6TTM0LDIySDM1VjIzSDM0ek0zNSwyMkgzNlYyM0gzNXpNMzYsMjJIMzdWMjNIMzZ6TTM3LDIySDM4VjIzSDM3ek0zOCwyMkgzOVYyM0gzOHpNNDAsMjJINDFWMjNINDB6TTUsMjNINlYyNEg1ek04LDIzSDlWMjRIOHpNOSwyM0gxMFYyNEg5ek0xMSwyM0gxMlYyNEgxMXpNMTQsMjNIMTVWMjRIMTR6TTE1LDIzSDE2VjI0SDE1ek0xNiwyM0gxN1YyNEgxNnpNMTksMjNIMjBWMjRIMTl6TTIwLDIzSDIxVjI0SDIwek0yMywyM0gyNFYyNEgyM3pNMjQsMjNIMjVWMjRIMjR6TTI5LDIzSDMwVjI0SDI5ek0zMSwyM0gzMlYyNEgzMXpNMzUsMjNIMzZWMjRIMzV6TTM3LDIzSDM4VjI0SDM3ek00MCwyM0g0MVYyNEg0MHpNNCwyNEg1VjI1SDR6TTUsMjRINlYyNUg1ek03LDI0SDhWMjVIN3pNOSwyNEgxMFYyNUg5ek0xMCwyNEgxMVYyNUgxMHpNMTEsMjRIMTJWMjVIMTF6TTEyLDI0SDEzVjI1SDEyek0xNCwyNEgxNVYyNUgxNHpNMTYsMjRIMTdWMjVIMTZ6TTE3LDI0SDE4VjI1SDE3ek0xOCwyNEgxOVYyNUgxOHpNMjEsMjRIMjJWMjVIMjF6TTIzLDI0SDI0VjI1SDIzek0yOCwyNEgyOVYyNUgyOHpNMzAsMjRIMzFWMjVIMzB6TTMxLDI0SDMyVjI1SDMxek0zMiwyNEgzM1YyNUgzMnpNMzMsMjRIMzRWMjVIMzN6TTM0LDI0SDM1VjI1SDM0ek0zNSwyNEgzNlYyNUgzNXpNMzYsMjRIMzdWMjVIMzZ6TTM3LDI0SDM4VjI1SDM3ek0zOCwyNEgzOVYyNUgzOHpNNiwyNUg3VjI2SDZ6TTgsMjVIOVYyNkg4ek05LDI1SDEwVjI2SDl6TTExLDI1SDEyVjI2SDExek0xNCwyNUgxNVYyNkgxNHpNMTUsMjVIMTZWMjZIMTV6TTIxLDI1SDIyVjI2SDIxek0yMywyNUgyNFYyNkgyM3pNMjYsMjVIMjdWMjZIMjZ6TTI3LDI1SDI4VjI2SDI3ek0zMCwyNUgzMVYyNkgzMHpNMzEsMjVIMzJWMjZIMzF6TTMyLDI1SDMzVjI2SDMyek0zNiwyNUgzN1YyNkgzNnpNMzgsMjVIMzlWMjZIMzh6TTUsMjZINlYyN0g1ek03LDI2SDhWMjdIN3pNOSwyNkgxMFYyN0g5ek0xMCwyNkgxMVYyN0gxMHpNMTQsMjZIMTVWMjdIMTR6TTE2LDI2SDE3VjI3SDE2ek0xOCwyNkgxOVYyN0gxOHpNMTksMjZIMjBWMjdIMTl6TTIwLDI2SDIxVjI3SDIwek0yNSwyNkgyNlYyN0gyNXpNMjcsMjZIMjhWMjdIMjd6TTI5LDI2SDMwVjI3SDI5ek0zMSwyNkgzMlYyN0gzMXpNMzIsMjZIMzNWMjdIMzJ6TTM0LDI2SDM1VjI3SDM0ek0zNSwyNkgzNlYyN0gzNXpNMzcsMjZIMzhWMjdIMzd6TTQwLDI2SDQxVjI3SDQwek00LDI3SDVWMjhINHpNOSwyN0gxMFYyOEg5ek0xMiwyN0gxM1YyOEgxMnpNMTUsMjdIMTZWMjhIMTV6TTE2LDI3SDE3VjI4SDE2ek0xNywyN0gxOFYyOEgxN3pNMTgsMjdIMTlWMjhIMTh6TTIwLDI3SDIxVjI4SDIwek0yMiwyN0gyM1YyOEgyMnpNMjMsMjdIMjRWMjhIMjN6TTI0LDI3SDI1VjI4SDI0ek0yOCwyN0gyOVYyOEgyOHpNMzAsMjdIMzFWMjhIMzB6TTM0LDI3SDM1VjI4SDM0ek0zNSwyN0gzNlYyOEgzNXpNMzYsMjdIMzdWMjhIMzZ6TTM3LDI3SDM4VjI4SDM3ek0zOCwyN0gzOVYyOEgzOHpNNDAsMjdINDFWMjhINDB6TTQsMjhINVYyOUg0ek01LDI4SDZWMjlINXpNNywyOEg4VjI5SDd6TTgsMjhIOVYyOUg4ek0xMCwyOEgxMVYyOUgxMHpNMTEsMjhIMTJWMjlIMTF6TTEyLDI4SDEzVjI5SDEyek0xMywyOEgxNFYyOUgxM3pNMTQsMjhIMTVWMjlIMTR6TTE2LDI4SDE3VjI5SDE2ek0xNywyOEgxOFYyOUgxN3pNMTksMjhIMjBWMjlIMTl6TTIxLDI4SDIyVjI5SDIxek0yNCwyOEgyNVYyOUgyNHpNMjcsMjhIMjhWMjlIMjd6TTI4LDI4SDI5VjI5SDI4ek0yOSwyOEgzMFYyOUgyOXpNMzEsMjhIMzJWMjlIMzF6TTMyLDI4SDMzVjI5SDMyek0zNCwyOEgzNVYyOUgzNHpNMzUsMjhIMzZWMjlIMzV6TTM5LDI4SDQwVjI5SDM5ek00MCwyOEg0MVYyOUg0MHpNNCwyOUg1VjMwSDR6TTcsMjlIOFYzMEg3ek04LDI5SDlWMzBIOHpNOSwyOUgxMFYzMEg5ek0xMSwyOUgxMlYzMEgxMXpNMTUsMjlIMTZWMzBIMTV6TTE2LDI5SDE3VjMwSDE2ek0xOCwyOUgxOVYzMEgxOHpNMjIsMjlIMjNWMzBIMjJ6TTIzLDI5SDI0VjMwSDIzek0yNSwyOUgyNlYzMEgyNXpNMzAsMjlIMzFWMzBIMzB6TTMyLDI5SDMzVjMwSDMyek0zNCwyOUgzNVYzMEgzNHpNMzYsMjlIMzdWMzBIMzZ6TTM4LDI5SDM5VjMwSDM4ek00LDMwSDVWMzFINHpNNSwzMEg2VjMxSDV6TTksMzBIMTBWMzFIOXpNMTAsMzBIMTFWMzFIMTB6TTEyLDMwSDEzVjMxSDEyek0xNCwzMEgxNVYzMUgxNHpNMTYsMzBIMTdWMzFIMTZ6TTE4LDMwSDE5VjMxSDE4ek0xOSwzMEgyMFYzMUgxOXpNMjEsMzBIMjJWMzFIMjF6TTIyLDMwSDIzVjMxSDIyek0yNSwzMEgyNlYzMUgyNXpNMjYsMzBIMjdWMzFIMjZ6TTI5LDMwSDMwVjMxSDI5ek0zMCwzMEgzMVYzMUgzMHpNMzEsMzBIMzJWMzFIMzF6TTMyLDMwSDMzVjMxSDMyek0zNSwzMEgzNlYzMUgzNXpNMzcsMzBIMzhWMzFIMzd6TTM5LDMwSDQwVjMxSDM5ek00MCwzMEg0MVYzMUg0MHpNNCwzMUg1VjMySDR6TTgsMzFIOVYzMkg4ek0xMSwzMUgxMlYzMkgxMXpNMTQsMzFIMTVWMzJIMTR6TTE2LDMxSDE3VjMySDE2ek0xOCwzMUgxOVYzMkgxOHpNMjAsMzFIMjFWMzJIMjB6TTIyLDMxSDIzVjMySDIyek0yMywzMUgyNFYzMkgyM3pNMjcsMzFIMjhWMzJIMjd6TTI4LDMxSDI5VjMySDI4ek0zMCwzMUgzMVYzMkgzMHpNMzEsMzFIMzJWMzJIMzF6TTMzLDMxSDM0VjMySDMzek0zNCwzMUgzNVYzMkgzNHpNMzUsMzFIMzZWMzJIMzV6TTM2LDMxSDM3VjMySDM2ek0zNywzMUgzOFYzMkgzN3pNMzgsMzFIMzlWMzJIMzh6TTQwLDMxSDQxVjMySDQwek00LDMySDVWMzNINHpNNiwzMkg3VjMzSDZ6TTksMzJIMTBWMzNIOXpNMTAsMzJIMTFWMzNIMTB6TTEzLDMySDE0VjMzSDEzek0xNSwzMkgxNlYzM0gxNXpNMTYsMzJIMTdWMzNIMTZ6TTE4LDMySDE5VjMzSDE4ek0xOSwzMkgyMFYzM0gxOXpNMjAsMzJIMjFWMzNIMjB6TTIzLDMySDI0VjMzSDIzek0yNCwzMkgyNVYzM0gyNHpNMjYsMzJIMjdWMzNIMjZ6TTI3LDMySDI4VjMzSDI3ek0yOCwzMkgyOVYzM0gyOHpNMjksMzJIMzBWMzNIMjl6TTMxLDMySDMyVjMzSDMxek0zMiwzMkgzM1YzM0gzMnpNMzMsMzJIMzRWMzNIMzN6TTM0LDMySDM1VjMzSDM0ek0zNSwzMkgzNlYzM0gzNXpNMzYsMzJIMzdWMzNIMzZ6TTM3LDMySDM4VjMzSDM3ek0zOSwzMkg0MFYzM0gzOXpNMTIsMzNIMTNWMzRIMTJ6TTEzLDMzSDE0VjM0SDEzek0xNCwzM0gxNVYzNEgxNHpNMTUsMzNIMTZWMzRIMTV6TTE2LDMzSDE3VjM0SDE2ek0xOSwzM0gyMFYzNEgxOXpNMjAsMzNIMjFWMzRIMjB6TTIxLDMzSDIyVjM0SDIxek0yMywzM0gyNFYzNEgyM3pNMzIsMzNIMzNWMzRIMzJ6TTM2LDMzSDM3VjM0SDM2ek0zOCwzM0gzOVYzNEgzOHpNMzksMzNINDBWMzRIMzl6TTQsMzRINVYzNUg0ek01LDM0SDZWMzVINXpNNiwzNEg3VjM1SDZ6TTcsMzRIOFYzNUg3ek04LDM0SDlWMzVIOHpNOSwzNEgxMFYzNUg5ek0xMCwzNEgxMVYzNUgxMHpNMTIsMzRIMTNWMzVIMTJ6TTEzLDM0SDE0VjM1SDEzek0xNSwzNEgxNlYzNUgxNXpNMTYsMzRIMTdWMzVIMTZ6TTE5LDM0SDIwVjM1SDE5ek0yMSwzNEgyMlYzNUgyMXpNMjIsMzRIMjNWMzVIMjJ6TTIzLDM0SDI0VjM1SDIzek0yNSwzNEgyNlYzNUgyNXpNMjcsMzRIMjhWMzVIMjd6TTI4LDM0SDI5VjM1SDI4ek0zMCwzNEgzMVYzNUgzMHpNMzIsMzRIMzNWMzVIMzJ6TTM0LDM0SDM1VjM1SDM0ek0zNiwzNEgzN1YzNUgzNnpNNDAsMzRINDFWMzVINDB6TTQsMzVINVYzNkg0ek0xMCwzNUgxMVYzNkgxMHpNMTIsMzVIMTNWMzZIMTJ6TTEzLDM1SDE0VjM2SDEzek0xNSwzNUgxNlYzNkgxNXpNMTcsMzVIMThWMzZIMTd6TTE5LDM1SDIwVjM2SDE5ek0yMCwzNUgyMVYzNkgyMHpNMjMsMzVIMjRWMzZIMjN6TTI3LDM1SDI4VjM2SDI3ek0yOSwzNUgzMFYzNkgyOXpNMzAsMzVIMzFWMzZIMzB6TTMxLDM1SDMyVjM2SDMxek0zMiwzNUgzM1YzNkgzMnpNMzYsMzVIMzdWMzZIMzZ6TTM5LDM1SDQwVjM2SDM5ek00LDM2SDVWMzdINHpNNiwzNkg3VjM3SDZ6TTcsMzZIOFYzN0g3ek04LDM2SDlWMzdIOHpNMTAsMzZIMTFWMzdIMTB6TTEyLDM2SDEzVjM3SDEyek0xNCwzNkgxNVYzN0gxNHpNMTcsMzZIMThWMzdIMTd6TTE4LDM2SDE5VjM3SDE4ek0yMCwzNkgyMVYzN0gyMHpNMjIsMzZIMjNWMzdIMjJ6TTIzLDM2SDI0VjM3SDIzek0yNSwzNkgyNlYzN0gyNXpNMjcsMzZIMjhWMzdIMjd6TTI4LDM2SDI5VjM3SDI4ek0yOSwzNkgzMFYzN0gyOXpNMzAsMzZIMzFWMzdIMzB6TTMxLDM2SDMyVjM3SDMxek0zMiwzNkgzM1YzN0gzMnpNMzMsMzZIMzRWMzdIMzN6TTM0LDM2SDM1VjM3SDM0ek0zNSwzNkgzNlYzN0gzNXpNMzYsMzZIMzdWMzdIMzZ6TTQwLDM2SDQxVjM3SDQwek00LDM3SDVWMzhINHpNNiwzN0g3VjM4SDZ6TTcsMzdIOFYzOEg3ek04LDM3SDlWMzhIOHpNMTAsMzdIMTFWMzhIMTB6TTEyLDM3SDEzVjM4SDEyek0xNCwzN0gxNVYzOEgxNHpNMTUsMzdIMTZWMzhIMTV6TTE3LDM3SDE4VjM4SDE3ek0xOCwzN0gxOVYzOEgxOHpNMjQsMzdIMjVWMzhIMjR6TTI2LDM3SDI3VjM4SDI2ek0yNywzN0gyOFYzOEgyN3pNMzMsMzdIMzRWMzhIMzN6TTM0LDM3SDM1VjM4SDM0ek0zNywzN0gzOFYzOEgzN3pNMzgsMzdIMzlWMzhIMzh6TTQwLDM3SDQxVjM4SDQwek00LDM4SDVWMzlINHpNNiwzOEg3VjM5SDZ6TTcsMzhIOFYzOUg3ek04LDM4SDlWMzlIOHpNMTAsMzhIMTFWMzlIMTB6TTE3LDM4SDE4VjM5SDE3ek0yMiwzOEgyM1YzOUgyMnpNMjYsMzhIMjdWMzlIMjZ6TTI3LDM4SDI4VjM5SDI3ek0yOCwzOEgyOVYzOUgyOHpNMzYsMzhIMzdWMzlIMzZ6TTQwLDM4SDQxVjM5SDQwek00LDM5SDVWNDBINHpNMTAsMzlIMTFWNDBIMTB6TTEzLDM5SDE0VjQwSDEzek0xNSwzOUgxNlY0MEgxNXpNMTYsMzlIMTdWNDBIMTZ6TTE5LDM5SDIwVjQwSDE5ek0yMSwzOUgyMlY0MEgyMXpNMjYsMzlIMjdWNDBIMjZ6TTI3LDM5SDI4VjQwSDI3ek0yOCwzOUgyOVY0MEgyOHpNMzAsMzlIMzFWNDBIMzB6TTMxLDM5SDMyVjQwSDMxek0zMiwzOUgzM1Y0MEgzMnpNMzYsMzlIMzdWNDBIMzZ6TTM3LDM5SDM4VjQwSDM3ek0zOCwzOUgzOVY0MEgzOHpNMzksMzlINDBWNDBIMzl6TTQwLDM5SDQxVjQwSDQwek00LDQwSDVWNDFINHpNNSw0MEg2VjQxSDV6TTYsNDBIN1Y0MUg2ek03LDQwSDhWNDFIN3pNOCw0MEg5VjQxSDh6TTksNDBIMTBWNDFIOXpNMTAsNDBIMTFWNDFIMTB6TTEyLDQwSDEzVjQxSDEyek0xNyw0MEgxOFY0MUgxN3pNMTgsNDBIMTlWNDFIMTh6TTIwLDQwSDIxVjQxSDIwek0yMiw0MEgyM1Y0MUgyMnpNMjQsNDBIMjVWNDFIMjR6TTI3LDQwSDI4VjQxSDI3ek0yOCw0MEgyOVY0MUgyOHpNMzAsNDBIMzFWNDFIMzB6TTMyLDQwSDMzVjQxSDMyek0zMyw0MEgzNFY0MUgzM3pNMzUsNDBIMzZWNDFIMzV6TTQwLDQwSDQxVjQxSDQweiIgaWQ9InFyLXBhdGgiIGZpbGw9IiMwMDAwMDAiIGZpbGwtb3BhY2l0eT0iMSIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9Im5vbmUiIC8+PC9zdmc+" alt="課程檔案 Google Drive QR code">
+            <span>掃描開啟課程檔案</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="1" aria-label="課程目錄">
+        <header class="slide-header"><span class="section-label">課程目錄</span><h2>今天會從概念走到實作</h2></header>
+        <div class="slide-body">
+          <p class="lead">先理解 RAG 為什麼有用，再拆解檢索流程、閱讀程式，最後認識可以繼續延伸的方向。</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>章節</th><th>主題</th><th>會回答的問題</th></tr></thead>
+            <tbody>
+              <tr><td>01</td><td><a class="agenda-link" href="#slide-4" data-slide-target="第一章開場：為什麼需要 RAG">為什麼需要 RAG</a></td><td>LLM 不知道指定文件時，怎麼讓它根據資料回答？</td></tr>
+              <tr><td>02</td><td><a class="agenda-link" href="#slide-10" data-slide-target="第二章開場：RAG 怎麼運作">RAG 怎麼運作</a></td><td>文件如何經過 chunk、embedding 與 index，變成可搜尋的資料？</td></tr>
+              <tr><td>03</td><td><a class="agenda-link" href="#slide-21" data-slide-target="第三章開場：向量檢索的原理">向量檢索的原理</a></td><td>系統如何比較相似度，並取回 Top-k chunks？</td></tr>
+              <tr><td>04</td><td><a class="agenda-link" href="#slide-28" data-slide-target="第四章開場：從概念到程式">從概念到程式</a></td><td>LangChain、metadata 與 ChromaDB 在 notebook 中各做什麼？</td></tr>
+              <tr><td>05</td><td><a class="agenda-link" href="#slide-40" data-slide-target="第五章開場：RAG 與外部工具">RAG 與外部工具</a></td><td>RAG 如何結合 Agent、MCP、雲端服務與不同資料格式？</td></tr>
+            </tbody>
+          </table></div>
+          <p class="takeaway"><b>課堂實作：</b>概念說明後，會開啟 <code>pdf_loader_student.ipynb</code>，實際載入 PDF、建立索引並測試檢索結果。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="0" aria-label="課堂環境準備">
+        <header class="slide-header"><span class="section-label">開始前</span><h2>課堂環境準備</h2></header>
+        <div class="slide-body">
+          <p class="lead">使用 VS Code 開啟整個課程資料夾後，先在整合式終端機執行：</p>
+          <pre><code>uv sync --locked</code></pre>
+          <div class="two-col">
+            <div class="rule-block"><h3>指令執行時</h3><p>可以先聽概念說明。uv 會建立 <code>.venv</code>，並依照鎖定版本安裝 notebook 使用的套件。</p></div>
+            <div class="rule-block"><h3>指令完成後</h3><p>開啟 <code>pdf_loader_student.ipynb</code>，按右上角 <strong>Select Kernel</strong>，選擇專案 <code>.venv</code> 裡的 Python。</p></div>
+          </div>
+          <div class="note"><span class="box-label">第一次執行 Embedding</span><p>模型會在 notebook 執行到 Embedding 時下載，因此需保持網路連線。</p></div>
+        </div>
+      </section>
+
+      <section class="slide chapter-slide" data-minutes="0" aria-label="第一章開場：為什麼需要 RAG">
+        <div class="chapter-content">
+          <p class="chapter-kicker">PART 1</p>
+          <span class="chapter-index" aria-hidden="true">01</span>
+          <h2>為什麼需要 RAG</h2>
+          <p class="chapter-lead">先理解 LLM 的知識限制，再看如何把指定文件變成回答時可以使用的 Context。</p>
+          <div class="chapter-topics" aria-label="本章主題"><span>LLM 的知識來源</span><span>Context</span><span>Retrieval + Generation</span></div>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="1" aria-label="LLM 使用時的常見問題">
+        <header class="slide-header"><span class="section-label">Part 1 · 問題</span><h2>LLM 使用時的常見問題</h2></header>
+        <div class="slide-body">
+          <p class="lead">LLM 回答問題時，主要依靠訓練期間學到的知識，以及這次提問附上的內容。它可以組合、推論資訊，卻不會自動讀取沒有提供給它的文件。</p>
+          <p>例如新發布的課程公告、個人筆記或未公開的資料，都不能假設模型已經知道。即使缺少依據，模型仍可能產生語氣肯定、看起來合理的回答。</p>
+          <div class="note"><span class="box-label">接下來</span><p>先看模型的知識如何形成，再看如何讓回答依據指定資料。</p></div>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="LLM 知識來源">
+        <header class="slide-header"><span class="section-label">Part 1 · 1.1</span><h2>LLM 的知識從哪裡來</h2></header>
+        <div class="slide-body">
+          <p>訓練時，模型讀取大量資料並調整參數，學到文字與概念的關聯。生成回答時，它使用這些參數，而不是自動打開一份原始文件。</p>
+          <figure><div class="figure"><span class="figure-title">簡化的訓練過程</span><div class="flow-row"><span class="node">Training data</span><span class="arrow">→</span><span class="node">訓練 LLM</span><span class="arrow">→</span><span class="node">Parameters：學到的模式與知識</span></div></div><figcaption>此圖不展開 Transformer 訓練；只說明模型知識如何形成。</figcaption></figure>
+          <div class="note"><span class="box-label">區別</span><p>模型參數不是能逐筆查詢、保留來源與版本的文件資料庫。回答流暢，不代表它查過指定文件。</p></div>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="3" aria-label="LLM 知識限制">
+        <header class="slide-header"><span class="section-label">Part 1 · 1.2</span><h2>什麼資訊不能假設模型已經知道</h2></header>
+        <div class="slide-body">
+          <p>問題要求的特定事實，可能沒有可靠地反映在模型參數裡。模型仍可能產生合理語句，但那不等於答案符合指定資料。</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>資料類型</th><th>限制</th></tr></thead>
+            <tbody>
+              <tr><td>訓練後的新資訊</td><td>後來發布的公告或更新，不能假設模型已看過。</td></tr>
+              <tr><td>私有資料</td><td>未公開的 <code>employee_handbook.pdf</code> 不一定在訓練資料中。</td></tr>
+              <tr><td>使用者自己的資料</td><td>個人筆記或上傳的 PDF，需要在這次使用時提供。</td></tr>
+              <tr><td>細節或特定領域資訊</td><td>模型可能懂一般概念，卻不知道某文件的條件、數值或版本。</td></tr>
+            </tbody>
+          </table></div>
+          <div class="note"><span class="box-label">範圍</span><p>這裡討論「只用模型本身回答」。若產品另接搜尋或檔案工具，要看那些工具實際找回了什麼。</p></div>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="提供 Context">
+        <header class="slide-header"><span class="section-label">Part 1 · 1.3</span><h2>先把相關 Context 提供給 LLM</h2></header>
+        <div class="slide-body">
+          <p><strong>Context</strong> 是模型在本次回答中可讀到的背景資料。若問題是「第 4 次作業要交什麼格式？」，把「作業說明」和問題一起提供，比只給問題更有依據。</p>
+          <figure><div class="figure"><span class="figure-title">最小做法</span><div class="flow-row"><span class="node">Question + relevant document</span><span class="arrow">→</span><span class="node">LLM</span><span class="arrow">→</span><span class="node">Answer</span></div></div><figcaption>這已經包含 RAG 的核心做法：回答前提供外部資料。</figcaption></figure>
+          <p>如果資料變成數百份文件，就不能每次都全部放進輸入。此時必須先選出可能相關的段落；這一步叫 <strong>Retrieval（檢索）</strong>。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="RAG 定義">
+        <header class="slide-header"><span class="section-label">Part 1 · 1.4</span><h2>RAG = Retrieval + Generation</h2></header>
+        <div class="slide-body">
+          <div class="definition"><span class="box-label">定義</span><p>在生成答案前，先從外部知識庫找出與 query 相關的資訊，再把找回的內容連同問題提供給 LLM。</p></div>
+          <figure><div class="figure comparison">
+            <div><span class="figure-title">Without RAG</span><div class="flow-row"><span class="node">Question</span><span class="arrow">→</span><span class="node">LLM</span><span class="arrow">→</span><span class="node">Answer</span></div></div>
+            <div><span class="figure-title">With RAG</span><div class="flow-row"><span class="node">Question</span><span class="arrow">→</span><span class="node">Retrieval</span><span class="arrow">→</span><span class="node">Relevant context</span></div><div class="small accent" style="margin:7px 0 7px 16px">↓ 與原問題合併</div><div class="flow-row"><span class="node">Question + context</span><span class="arrow">→</span><span class="node">LLM</span><span class="arrow">→</span><span class="node">Answer</span></div></div>
+          </div></figure>
+        </div>
+        <p class="takeaway"><b>核心直覺：</b>不要求 LLM 記住所有知識；需要時，再把相關知識找給它。檢索或生成出錯，答案仍可能錯。</p>
+      </section>
+
+      <section class="slide chapter-slide" data-minutes="0" aria-label="第二章開場：RAG 怎麼運作">
+        <div class="chapter-content">
+          <p class="chapter-kicker">PART 2</p>
+          <span class="chapter-index" aria-hidden="true">02</span>
+          <h2>RAG 怎麼運作</h2>
+          <p class="chapter-lead">把完整流程拆成提問前的 Indexing，以及每次提問時執行的 Query 與 Generation。</p>
+          <div class="chapter-topics" aria-label="本章主題"><span>Chunking</span><span>Embedding</span><span>Indexing</span><span>Query</span><span>Generation</span></div>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="RAG 完整流程">
+        <header class="slide-header"><span class="section-label">Part 2 · Big picture</span><h2>一個 RAG 系統分為兩個階段</h2></header>
+        <div class="slide-body">
+          <p>先將文件整理成可搜尋的資料；收到問題後，再搜尋、取回原文並交給 LLM。文件與問題都要經過相同或相容的 embedding model。</p>
+          <figure><div class="figure stage-figure compact-pipeline">
+            <div><div class="stage-label">Indexing · 提問前</div><div class="flow-col"><span class="node">Documents</span><span class="down">↓</span><span class="node">Chunking</span><span class="down">↓</span><span class="node">Embedding → document vectors</span><span class="down">↓</span><span class="node">Vector index</span></div></div>
+            <div><div class="stage-label">Query · 提問後</div><div class="flow-col"><span class="node">User query</span><span class="down">↓</span><span class="node">Embedding → query vector</span><span class="down">↓</span><span class="node">Similarity search → top-k chunks</span><span class="down">↓</span><span class="node">Query + context → LLM → Answer</span></div><p class="bridge">Similarity search 會讀取左欄建立的 index。</p></div>
+          </div><figcaption>這是概念流程；真實系統還可能加入文件載入、權限、過濾與更新。</figcaption></figure>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="建立索引">
+        <header class="slide-header"><span class="section-label">Part 2 · Indexing</span><h2>提問前：先讓文件可以被搜尋</h2></header>
+        <div class="slide-body">
+          <p>提問前，先把文件切成片段、轉成向量，建立可搜尋的索引。搜尋時，系統會先找到相近的向量，再取回對應的原文，交給 LLM 作為回答依據。</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>步驟</th><th>輸入</th><th>輸出</th><th>為什麼需要</th></tr></thead>
+            <tbody>
+              <tr><td>Chunking</td><td>長文件</td><td>多個文字片段</td><td>讓搜尋單位更精確</td></tr>
+              <tr><td>Embedding</td><td>每個 chunk</td><td>數值向量</td><td>讓問題與段落可以比較</td></tr>
+              <tr><td>Index</td><td>向量、原文與來源</td><td>可搜尋的資料結構</td><td>查詢時找回相近向量及原文</td></tr>
+            </tbody>
+          </table></div>
+          <div class="note"><span class="box-label">更新</span><p>如果文件改了，相關的 chunks、vectors 與 index 資料也需要更新；否則查詢可能找回舊內容。</p></div>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="3" aria-label="Chunking 做什麼">
+        <header class="slide-header"><span class="section-label">Part 2 · Chunking</span><h2>Chunking 決定「搜尋單位」</h2></header>
+        <div class="slide-body">
+          <p>若把整份長文件當作一筆搜尋結果，少量相關內容會和大量無關內容混在一起；系統也無法只取回真正需要的段落。</p>
+          <div class="two-col narrow-wide">
+            <figure><div class="figure"><span class="figure-title">一份文件切成多個 chunk</span><div class="flow-col"><span class="node">課程說明全文</span><span class="down">↓</span><span class="node">Chunk 1：課程目標</span><span class="node">Chunk 2：作業格式</span><span class="node">Chunk 3：評分方式</span></div></div></figure>
+            <div class="v-stack"><p><strong>Chunk</strong> 是可獨立向量化與檢索的文字片段。切段時保留文件名稱、頁碼或位置，才能在找回後查證原文。</p><div class="note"><span class="box-label">小例子</span><p>問「作業繳交格式」時，理想的檢索單位是寫有格式的片段，而非整份課程說明。</p></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="Chunk 大小取捨">
+        <header class="slide-header"><span class="section-label">Part 2 · Chunking</span><h2>Chunk 太大或太小，都有代價</h2></header>
+        <div class="slide-body">
+          <div class="two-col">
+            <div class="rule-block"><h3>太大</h3><p>一個結果含較多 irrelevant information。即使只有一句相關，搜尋也只能拿回整大段，粒度較粗。</p></div>
+            <div class="rule-block"><h3>太小</h3><p>完整意思可能被拆開。例如只取到「期限延後」，卻沒取到「延到哪一天」。</p></div>
+          </div>
+          <figure><div class="figure"><span class="figure-title">要保留足夠的語意單位</span><div class="flow-row"><span class="node">「第 4 次作業」</span><span class="arrow">+</span><span class="node">「截止延至 10/21」</span><span class="arrow">→</span><span class="node">可判讀的片段</span></div></div><figcaption>這是切段直覺；實務上還有依文件結構切分及重疊片段等策略。</figcaption></figure>
+        </div>
+        <p class="takeaway"><b>判斷標準：</b>一個 chunk 應足以表達可被搜尋、可被讀懂的局部內容。</p>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="Chunk overlap 與實務切段">
+        <header class="slide-header"><span class="section-label">Part 2 · Chunking</span><h2>實務上的做法：Overlap</h2></header>
+        <div class="slide-body">
+          <p>切點可能剛好把一句話或相連的資訊分到兩段。<strong>Overlap（重疊）</strong>是讓相鄰 chunks 共用一小段原文，使切點附近的內容在兩段中都能被檢索到。</p>
+          <figure><div class="figure">
+            <span class="figure-title">例：每段 100 個 token，重疊 20 個 token</span>
+            <div class="table-wrap"><table>
+              <thead><tr><th>片段</th><th>前段</th><th>共同內容</th><th>後段</th></tr></thead>
+              <tbody>
+                <tr><td>Chunk 1</td><td>第 1–80 個 token</td><td>第 81–100 個 token</td><td>—</td></tr>
+                <tr><td>Chunk 2</td><td>—</td><td>第 81–100 個 token</td><td>第 101–180 個 token</td></tr>
+              </tbody>
+            </table></div>
+          </div><figcaption>Token 是模型處理文字時使用的切分單位；兩列中間的 20 個 token 是同一段原文。</figcaption></figure>
+          <div class="two-col">
+            <div class="rule-block"><h3>為什麼使用</h3><p>如果重要資訊落在切點附近，重疊可減少其中一段缺少前後文的機會。</p></div>
+            <div class="rule-block"><h3>代價是什麼</h3><p>重複文字會增加索引量，也可能讓搜尋結果出現內容相近的 chunks，佔用提供給 LLM 的空間。</p></div>
+          </div>
+          <p class="small">實務上也常先依標題或段落切分，再控制 chunk 長度與 overlap；沒有適用所有文件的固定數值。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="3" aria-label="Keyword search 與 Embedding search">
+        <header class="slide-header"><span class="section-label">Part 2 · Embedding</span><h2>Embedding 讓搜尋不只依賴相同字詞</h2></header>
+        <div class="slide-body">
+          <p>Keyword search 主要比對文字是否出現。當問題與文件使用不同詞彙時，即使意思接近，也可能找不到。</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>資料</th><th>文字</th><th>Keyword search</th><th>Embedding search</th></tr></thead>
+            <tbody>
+              <tr><td>問題</td><td><code>car repair</code></td><td rowspan="2">沒有相同關鍵字，可能漏掉</td><td rowspan="2">語意接近，向量可能靠近</td></tr>
+              <tr><td>文件</td><td><code>automobile maintenance</code></td></tr>
+            </tbody>
+          </table></div>
+          <pre><code>"car repair"              → [0.21, -0.38, 0.72, ...]
+"automobile maintenance" → [0.19, -0.35, 0.69, ...]</code></pre>
+          <div class="note"><span class="box-label">重點</span><p>Embedding model 把文字轉成向量，讓系統可以比較語意。效果仍取決於模型、語言與文件內容，向量接近不代表兩句話完全相同。</p></div>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="3" aria-label="向量關係與跨語言搜尋">
+        <header class="slide-header"><span class="section-label">Part 2 · Embedding</span><h2>向量關係取決於模型學過什麼</h2></header>
+        <div class="slide-body">
+          <div class="two-col">
+            <div class="rule-block">
+              <h3>經典的詞向量例子</h3>
+              <p class="math"><span lang="en">king − man + woman ≈ queen</span></p>
+              <p>某些 Word2Vec 詞向量模型中，性別與角色的關係可能反映在向量方向上。這是幫助理解的經典例子，不是永遠成立的代數公式。</p>
+            </div>
+            <div class="rule-block">
+              <h3><code>cat</code> 和「貓咪」會靠近嗎？</h3>
+              <p><strong>不一定。</strong>模型必須在訓練時學到中文與英文的對應關係，兩個詞的向量才可能靠近。</p>
+              <p>若要做中英文混合搜尋，應選擇明確支援多語言的 embedding model，並用自己的問題與文件實際測試。</p>
+            </div>
+          </div>
+          <div class="note"><span class="box-label">本課的判斷方式</span><p>不要只看模型名稱或單一示例。先確認資料語言與使用情境，再檢查真正相關的 chunks 是否能排到前面。</p></div>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="Index 是什麼">
+        <header class="slide-header"><span class="section-label">Part 2 · Index</span><h2>Index 不只是「存向量」</h2></header>
+        <div class="slide-body">
+          <p><strong>Vector index（向量索引）</strong>組織段落向量，讓 query 到來時能搜尋相近向量。搜尋結果還必須連回 chunk 原文與來源，才能交給 LLM 並供讀者查證。</p>
+          <div class="figure">
+            <div class="v-stack">
+              <div class="rule-block"><strong>Vector：</strong><code>[0.21, -0.38, 0.72, ...]</code>　用來比較</div>
+              <div class="rule-block"><strong>Chunk text：</strong>「第 4 次作業請繳交 PDF。」　用來回答</div>
+              <div class="rule-block"><strong>Source：</strong><code>assignment_04.pdf</code> 第 2 頁　用來追查</div>
+            </div>
+          </div>
+          <p class="small">資料少時可逐一比較；資料多時通常需更有效率的搜尋方法。如 FAISS 和 vector database，但此處不細講。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="3" aria-label="查詢階段">
+        <header class="slide-header"><span class="section-label">Part 2 · Query time</span><h2>提問後：向量化、搜尋、取回原文</h2></header>
+        <div class="slide-body">
+          <p>使用者問題經過與文件端相同或相容的 embedding model，得到 query vector。系統拿它與索引中的 document vectors 比較，按相似度取出若干 chunks。</p>
+          <figure><div class="figure">
+            <div class="flow-row"><span class="node">Query</span><span class="arrow">→</span><span class="node">Query vector</span><span class="arrow">→</span><span class="node">搜尋 index</span><span class="arrow">→</span><span class="node">Top-k chunks</span></div>
+          </div><figcaption>檢索會取回與問題相關的片段原文及其來源，供下一步生成答案使用。</figcaption></figure>
+          <div class="two-col">
+            <div class="rule-block"><h3>Document vectors</h3><p>提問前已計算並建立 index。</p></div>
+            <div class="rule-block"><h3>Query vector</h3><p>每次收到問題後，依該問題計算。</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide generation-slide" data-minutes="2" aria-label="Generation 階段">
+        <header class="slide-header"><span class="section-label">Part 2 · Generation</span><h2>把 Query 與取回的原文一起交給 LLM</h2></header>
+        <div class="slide-body">
+          <p>Retrieval 選出候選 chunks 後，系統把問題、段落原文與必要來源放入 LLM 的輸入。LLM 再根據這些資料組織答案。</p>
+          <pre><code>Question: 第 4 次作業要交什麼格式？
+
+Retrieved context:
+[assignment_04.pdf, p.2]
+第 4 次作業請繳交 PDF。
+
+Instruction: 根據 context 回答，並指出來源。</code></pre>
+          <div class="two-col">
+            <div class="rule-block"><h3>可能回答</h3><p>「請繳交 PDF；來源：<code>assignment_04.pdf</code> 第 2 頁。」</p></div>
+            <div class="note"><span class="box-label">限制</span><p>如果檢索漏掉關鍵段落，LLM 無法根據未提供的內容作出有依據的回答。</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide chapter-slide" data-minutes="0" aria-label="第三章開場：向量檢索的原理">
+        <div class="chapter-content">
+          <p class="chapter-kicker">PART 3</p>
+          <span class="chapter-index" aria-hidden="true">03</span>
+          <h2>向量檢索的原理</h2>
+          <p class="chapter-lead">理解文字如何轉成向量，以及系統如何比較相似度、排序並找回最相關的段落。</p>
+          <div class="chapter-topics" aria-label="本章主題"><span>Vector space</span><span>Cosine similarity</span><span>Top-k</span></div>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="3" aria-label="問題向量與最近的 chunks">
+        <header class="slide-header"><span class="section-label">Part 3 · Embedding</span><h2>問題也是一個點，檢索會找最近的 chunks</h2></header>
+        <div class="slide-body">
+          <div class="two-col narrow-wide">
+            <div>
+              <p>先把問題與每個 chunk 都轉成向量。為了方便想像，右圖暫時只畫成二維平面。</p>
+              <p>問題 <code>cat care</code> 靠近 <code>kitten feeding</code>，因此這個 chunk 會比資料庫或咖啡內容更早被取回。</p>
+            </div>
+            <figure><div class="figure"><svg class="plot" viewBox="0 0 520 300" role="img" aria-labelledby="plot1-title plot1-desc">
+              <title id="plot1-title">問題向量與三個 chunk 向量</title><desc id="plot1-desc">問題 cat care 最接近 kitten feeding，另外兩個 chunks 距離較遠。</desc>
+              <line class="axis" x1="55" y1="250" x2="475" y2="250"/><line class="axis" x1="80" y1="275" x2="80" y2="28"/>
+              <line class="grid" x1="355" y1="95" x2="390" y2="122"/><line class="grid" x1="355" y1="95" x2="170" y2="178"/><line class="grid" x1="355" y1="95" x2="270" y2="225"/>
+              <circle class="primary" cx="355" cy="95" r="7"/><circle class="primary" cx="390" cy="122" r="6"/>
+              <circle class="secondary" cx="170" cy="178" r="6"/><circle class="secondary" cx="270" cy="225" r="6"/>
+              <text x="270" y="72">Query: cat care</text><text x="285" y="151">Chunk A: kitten feeding</text>
+              <text x="88" y="169">Chunk B: database index</text><text x="282" y="246">Chunk C: coffee brewing</text>
+              <text x="480" y="256">x</text><text x="67" y="23">y</text>
+            </svg></div><figcaption>虛線只表示「拿問題和每個 chunk 比較」，不是實際搜尋路徑。</figcaption></figure>
+          </div>
+          <div class="note"><span class="box-label">真實情況</span><p>這只是二維示意。課程使用的 embedding 有 384 維，無法直接畫出來，但「把問題與 chunks 放進同一個向量空間，再尋找最接近者」的概念相同。</p></div>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="3" aria-label="Cosine similarity 公式">
+        <header class="slide-header"><span class="section-label">Part 3 · Similarity</span><h2>Cosine similarity 比較向量方向</h2></header>
+        <div class="slide-body">
+          <p>Cosine similarity 不是直接量兩個點相隔幾公分，而是把向量看成從原點伸出的箭頭，比較兩支箭頭的<strong>方向與夾角</strong>：同方向接近 1，垂直接近 0，反方向接近 −1。</p>
+          <div class="figure" style="text-align:center"><span class="math" role="math" aria-label="cos theta equals q dot d divided by norm q times norm d">cos(θ) = <span class="fraction"><span>q · d</span><span>‖q‖ ‖d‖</span></span></span></div>
+          <div class="two-col">
+            <div class="rule-block"><p><code>q</code>：問題的 embedding<br><code>d</code>：某個文件 chunk 的 embedding<br><code>q · d</code>：對應位置相乘後加總，稱為內積</p></div>
+            <div class="rule-block"><p><code>‖q‖</code>、<code>‖d‖</code>：向量長度。分母把長度影響除掉，使分數主要反映方向。</p></div>
+          </div>
+        </div>
+        <p class="takeaway">計算分數是為了<b>排序候選段落</b>；分數不是答案正確率。<br><span class="small">例如：問「第 4 次作業要交什麼格式？」，寫著「第 3 次作業請交 PDF」的段落可能得到高分，但它不能回答第 4 次作業的問題。</span></p>
+      </section>
+
+      <section class="slide" data-minutes="3" aria-label="Cosine similarity 數字例子">
+        <header class="slide-header"><span class="section-label">Part 3 · Numerical example</span><h2>用二維向量實際算一次</h2></header>
+        <div class="slide-body">
+          <p>令 <code>q=(1,1)</code>、<code>d1=(1,0.8)</code>、<code>d2=(-1,0)</code>。先算內積與各向量長度，再代入公式。</p>
+          <div class="two-col narrow-wide">
+            <figure><div class="figure"><svg class="plot" viewBox="0 0 520 280" role="img" aria-labelledby="plot2-title plot2-desc">
+              <title id="plot2-title">Query 與兩段文件向量的方向</title><desc id="plot2-desc">q 與 d1 方向相近；d2 朝向左方。</desc>
+              <defs><marker id="blue-arrow" markerWidth="8" markerHeight="8" refX="6.2" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#2457d6"/></marker><marker id="grey-arrow" markerWidth="8" markerHeight="8" refX="6.2" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#169c8c"/></marker></defs>
+              <line class="axis" x1="73" y1="205" x2="462" y2="205"/><line class="axis" x1="260" y1="245" x2="260" y2="30"/>
+              <line class="primary" x1="260" y1="205" x2="380" y2="85" marker-end="url(#blue-arrow)"/><line class="primary" x1="260" y1="205" x2="380" y2="109" marker-end="url(#blue-arrow)"/><line class="secondary" x1="260" y1="205" x2="140" y2="205" marker-end="url(#grey-arrow)"/>
+              <text x="390" y="78">q=(1,1)</text><text x="390" y="125">d1=(1,0.8)</text><text x="74" y="190">d2=(-1,0)</text><text x="470" y="211">x</text><text x="248" y="24">y</text>
+            </svg></div></figure>
+            <div class="v-stack">
+              <div class="rule-block"><h3>q 與 d1</h3><p>內積：1×1 + 1×0.8 = 1.8<br>長度：‖q‖=√2、‖d1‖=√1.64<br><strong>cos(q,d1) = 1.8/√3.28 ≈ 0.994</strong></p></div>
+              <div class="rule-block"><h3>q 與 d2</h3><p>內積：1×(−1) + 1×0 = −1<br>長度：‖d2‖=1<br><strong>cos(q,d2) = −1/√2 ≈ −0.707</strong></p></div>
+            </div>
+          </div>
+        </div>
+        <p class="takeaway">因為 0.994 &gt; −0.707，<b>d1 排在 d2 前</b>。</p>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="Top-k 檢索">
+        <header class="slide-header"><span class="section-label">Part 3 · Top-k</span><h2>Top-k 取排序最前面的 k 段</h2></header>
+        <div class="slide-body">
+          <p>假設已對每個 chunk 算出相似度。若 <code>k=2</code>，按分數由高到低排序後，只取 A 與 B 的原文。</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>排名</th><th>Chunk</th><th>Similarity</th><th>k=2 的結果</th></tr></thead>
+            <tbody><tr><td>1</td><td>A</td><td>0.91</td><td>取回</td></tr><tr><td>2</td><td>B</td><td>0.84</td><td>取回</td></tr><tr><td>3</td><td>C</td><td>0.71</td><td>不取回</td></tr><tr><td>4</td><td>D</td><td>0.32</td><td>不取回</td></tr></tbody>
+          </table></div>
+          <div class="two-col"><div class="rule-block"><h3>k 太小</h3><p>可能漏掉回答所需的另一段資料。</p></div><div class="rule-block"><h3>k 太大</h3><p>可能帶入更多無關內容，也增加送入 LLM 的 token 數。</p></div></div>
+        </div>
+        <p class="takeaway">相似分數只決定<b>候選順序</b>，不能驗證片段是否足以回答問題。</p>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="Retrieval 偽程式碼">
+        <header class="slide-header"><span class="section-label">Part 3 · Putting it together</span><h2>把 Embedding、Similarity、Top-k 串起來</h2></header>
+        <div class="slide-body">
+          <p>下面的 Python-like pseudo-code 對應完整的檢索機制。<code>chunks[i]</code> 與 <code>document_vectors[i]</code> 是同一段資料的原文與向量。</p>
+          <pre><code>query_vector = embed(query)  # 問題 → 向量
+scores = [cosine_similarity(query_vector, v)
+          for v in document_vectors]  # 每段計算相似度
+top_indices = sorted(range(len(scores)),
+                     key=lambda i: scores[i],
+                     reverse=True)[:k]  # 排序後取前 k 段
+retrieved_chunks = [chunks[i] for i in top_indices]  # 找回原文</code></pre>
+          <p class="small">這段程式呈現檢索機制；大型索引與資料庫的實作並未包含在內。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="1" aria-label="RAG 機制總結">
+        <header class="slide-header"><span class="section-label">Part 3 · Summary</span><h2>從外部文件到有依據的回答</h2></header>
+        <div class="slide-body">
+          <figure><div class="figure stage-figure">
+            <div><div class="stage-label">先準備資料</div><div class="flow-col"><span class="node">Documents</span><span class="down">↓</span><span class="node">Chunks</span><span class="down">↓</span><span class="node">Document vectors + index</span></div></div>
+            <div><div class="stage-label">再回答問題</div><div class="flow-col"><span class="node">Query vector</span><span class="down">↓</span><span class="node">Similarity ranking + top-k</span><span class="down">↓</span><span class="node">Query + retrieved context → LLM</span></div></div>
+          </div></figure>
+          <div class="two-col">
+            <div class="rule-block"><h3>Retrieval 的輸出</h3><p>應是可追溯來源的 chunk 原文，而不是只有向量或分數。</p></div>
+            <div class="rule-block"><h3>答案的檢查</h3><p>確認原文是否真的支持答案；分數高不代表內容正確。</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide chapter-slide" data-minutes="0" aria-label="第四章開場：從概念到程式">
+        <div class="chapter-content">
+          <p class="chapter-kicker">PART 4</p>
+          <span class="chapter-index" aria-hidden="true">04</span>
+          <h2>從概念到程式</h2>
+          <p class="chapter-lead">先認識 LangChain 的 Document，再用短程式片段對照 notebook 裡的 RAG 流程。</p>
+          <div class="chapter-topics" aria-label="本章主題"><span>Document</span><span>metadata</span><span>PDF loader</span><span>程式導覽</span></div>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="3" aria-label="LangChain 與資料狀態">
+        <header class="slide-header"><span class="section-label">Part 4 · LangChain</span><h2>LangChain 串接每個資料狀態</h2></header>
+        <div class="slide-body">
+          <p>LangChain 提供一致的 <code>Document</code>、loader 與 splitter 介面，讓程式能把載入、切段與後續檢索串起來。Embedding model 與 ChromaDB 則負責向量和儲存。</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>左邊：程式</th><th>右邊：資料從什麼變成什麼</th></tr></thead>
+            <tbody>
+              <tr><td><code>PyPDFLoader(...).load()</code></td><td>PDF → 每頁一個 <code>Document</code></td></tr>
+              <tr><td><code>splitter.split_documents(pages)</code></td><td>Pages → 較短的 chunk <code>Documents</code></td></tr>
+              <tr><td><code>model.encode(chunk_texts)</code></td><td>Chunk 文字 → 文件向量</td></tr>
+              <tr><td><code>collection.add(...)</code></td><td>向量 + 原文 + metadata → ChromaDB</td></tr>
+              <tr><td><code>collection.query(...)</code></td><td>問題向量 → Top-k 原文、metadata、distance</td></tr>
+            </tbody>
+          </table></div>
+          <p class="takeaway"><b>看 notebook 時：</b>不要只看函式名稱；每一步都先確認輸入資料長什麼樣子，以及輸出交給下一步的是什麼。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="LangChain Document 型別">
+        <header class="slide-header"><span class="section-label">Part 4 · Document</span><h2>LangChain 的 Document：文字與來源</h2></header>
+        <div class="slide-body">
+          <p><code>Document</code> 是 LangChain 表示一筆文字資料的物件。在這堂課，一頁 PDF 或切出的一段文字，都可以是一個 <code>Document</code>。</p>
+          <pre><code>from langchain_core.documents import Document
+
+doc = Document(
+    page_content="第 4 次作業請繳交 PDF。",
+    metadata={"source_file": "課程說明.pdf", "page_number": 3},
+)</code></pre>
+          <div class="two-col">
+            <div class="rule-block"><h3><code>page_content</code></h3><p>這筆資料的文字。切段時會切它；檢索找回後，也會取出它來提供給 LLM。</p></div>
+            <div class="rule-block"><h3><code>metadata</code></h3><p>描述這筆文字的資訊。除了檔名、頁碼，也可能有 PDF 記錄的標題與作者；下一頁再拆開看。</p></div>
+          </div>
+          <p class="takeaway"><b>接到 notebook：</b>PDF 載入後得到每頁的 <code>Document</code>；<code>split_documents()</code> 再把頁面切成較小的 <code>Document</code>，並保留來源資訊。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="Document metadata 欄位來源">
+        <header class="slide-header"><span class="section-label">Part 4 · Document</span><h2>metadata：文件附帶的描述資訊</h2></header>
+        <div class="slide-body">
+          <p><code>metadata</code> 是「欄位名稱 → 值」的對照表，欄位沒有固定清單。載入器會放入它讀到的資訊；我們也可以在程式中加入需要的欄位。</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>欄位例子</th><th>記錄什麼</th><th>從哪裡來</th></tr></thead>
+            <tbody>
+              <tr><td><code>title</code>、<code>author</code></td><td>PDF 記錄的標題、作者</td><td>PDF 文件屬性；有資料時由載入器讀入</td></tr>
+              <tr><td><code>source</code>、<code>page</code></td><td>檔案路徑、頁面索引</td><td>PDF 載入器；<code>page</code> 從 0 開始</td></tr>
+              <tr><td><code>source_file</code>、<code>page_number</code></td><td>檔名、給人看的頁碼</td><td>本課 notebook 加入；<code>page_number</code> 從 1 開始</td></tr>
+              <tr><td><code>start_index</code></td><td>chunk 在原頁文字中的起始位置</td><td>本課切段程式設定產生</td></tr>
+            </tbody>
+          </table></div>
+          <div class="note"><span class="box-label">實際例子</span><p>本課的 <code>python_intro.pdf</code> 文件屬性有標題，<code>Author</code> 值是 <code>RAG practice corpus</code>。其他 PDF 的作者欄可能空白；欄位有值也不代表已核實作者身分。</p></div>
+          <p class="takeaway"><b>看程式時注意：</b><code>page=0</code> 指第一頁；notebook 另存 <code>page_number=1</code>，方便顯示來源。想知道實際有哪些欄位，可印出 <code>doc.metadata</code>。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="使用 metadata 篩選檢索範圍">
+        <header class="slide-header"><span class="section-label">Part 4 · Metadata filter</span><h2>metadata 也能用來篩選檢索範圍</h2></header>
+        <div class="slide-body">
+          <p>除了顯示來源，metadata 也能先排除不符合條件的 chunks，再進行向量搜尋。</p>
+          <pre><code># 建立索引時，替文件保存可比較的月份
+metadata = {"source_file": "report.pdf", "published_month": 202603}
+# $gte = greater than or equal，意思是 >=
+result = collection.query(
+    query_embeddings=[query_embedding],
+    where={"published_month": {"$gte": 202602}},
+    n_results=3,
+)</code></pre>
+          <div class="note"><span class="box-label">搜尋順序</span><p>先留下 <code>published_month ≥ 202602</code>，也就是 2026 年 2 月（含）之後的 chunks，再從中取回向量最相近的結果。</p></div>
+          <p class="small"><strong>資料格式要一致：</strong><code>202602</code> 代表 2026 年 2 月。若有些文件存文字、有些存數字，就無法可靠比較。目前 notebook 尚未加入這個欄位與 filter，這裡展示的是可延伸做法。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="1" aria-label="程式導覽：載入 PDF">
+        <header class="slide-header"><span class="section-label">Part 4 · Code 1/6</span><h2>讀取 PDF：取得每一頁的 Document</h2></header>
+        <div class="slide-body">
+          <p>先把資料夾中的 PDF 讀進來。<code>load_pdf_documents()</code> 內部使用 <code>PyPDFLoader</code>，讓每一頁成為一個帶有來源資訊的 <code>Document</code>。</p>
+          <pre><code>pdf_documents = load_pdf_documents(PDF_DIR)
+page_counts = Counter(doc.metadata["source_file"] for doc in pdf_documents)
+empty_pages = sum(not doc.page_content.strip() for doc in pdf_documents)
+print(f"共載入 {len(page_counts)} 份 PDF、{len(pdf_documents)} 頁。")</code></pre>
+          <div class="two-col">
+            <div class="rule-block"><h3>輸入</h3><p><code>PDF_DIR</code> 指向放 PDF 的資料夾。</p></div>
+            <div class="rule-block"><h3>輸出</h3><p><code>pdf_documents</code> 是頁面 <code>Document</code> 的清單；另外統計檔案與空白頁。</p></div>
+          </div>
+          <p class="takeaway"><b>下一步：</b>頁面可能仍太長，所以要把每頁切成適合搜尋的片段。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="1" aria-label="程式導覽：切分文件">
+        <header class="slide-header"><span class="section-label">Part 4 · Code 2/6</span><h2>切分文件：從頁面得到 chunks</h2></header>
+        <div class="slide-body">
+          <p><code>split_documents()</code> 把頁面文字切成較小的 <code>Document</code>。本課的函式預設每段最多 1000 個字元，相鄰段落重疊 200 個字元。</p>
+          <pre><code>chunks = split_documents(pdf_documents)
+print(f"{len(pdf_documents)} 個頁面文件切成 {len(chunks)} 個 chunks。")
+for index, chunk in enumerate(chunks[:2], start=1):
+    preview = chunk.page_content[:220].replace("\n", " ")
+    print(f"文字：{preview}...")</code></pre>
+          <div class="two-col">
+            <div class="rule-block"><h3>輸入</h3><p><code>pdf_documents</code>：上一頁讀到的頁面文件。</p></div>
+            <div class="rule-block"><h3>輸出</h3><p><code>chunks</code>：更短的片段；每段仍保留來源檔名與頁碼。</p></div>
+          </div>
+          <p class="takeaway"><b>下一步：</b>搜尋時要比較問題與片段，因此先把每個 chunk 轉成向量。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="程式導覽：產生文件向量">
+        <header class="slide-header"><span class="section-label">Part 4 · Code 3/6</span><h2>產生 embedding：每個 chunk 對應一個向量</h2></header>
+        <div class="slide-body">
+          <p>先取出每個 chunk 的文字，再交給 <code>EmbeddingManager</code>。這個類別在 notebook 中使用 Sentence Transformers 模型產生向量。</p>
+          <pre><code>index_embedding_manager = EmbeddingManager()
+chunk_texts = [chunk.page_content for chunk in chunks]
+chunk_embeddings = index_embedding_manager.encode(chunk_texts)
+print(f"Embedding shape：{chunk_embeddings.shape}")</code></pre>
+          <div class="two-col">
+            <div class="rule-block"><h3>輸入</h3><p><code>chunk_texts</code>：每個 chunk 的原文，順序與 <code>chunks</code> 相同。</p></div>
+            <div class="rule-block"><h3>輸出</h3><p><code>chunk_embeddings</code>：每段文字對應一個數值向量；<code>shape</code> 顯示筆數與向量維度。</p></div>
+          </div>
+          <p class="takeaway"><b>對齊很重要：</b>第 i 個向量要能連回第 i 個 chunk，檢索後才找得回原文。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="程式導覽：儲存向量索引">
+        <header class="slide-header"><span class="section-label">Part 4 · Code 4/6</span><h2>建立索引：一起保存向量、原文與來源</h2></header>
+        <div class="slide-body">
+          <p>在 ChromaDB 的 <code>collection</code>（一組可搜尋的資料）中，同一筆 chunk 的文字、來源資訊與向量一起寫入。</p>
+          <pre><code>collection.add(
+    ids=[make_chunk_id(doc) for doc in batch_documents],
+    documents=[doc.page_content for doc in batch_documents],
+    metadatas=[clean_metadata(doc.metadata) for doc in batch_documents],
+    embeddings=batch_embeddings.tolist(),
+)</code></pre>
+          <div class="two-col">
+            <div class="rule-block"><h3>輸入</h3><p>一批 chunks 和順序相同的一批 embeddings。</p></div>
+            <div class="rule-block"><h3>輸出</h3><p>寫入本機索引；之後搜尋到向量時，也能取回對應文字和來源。</p></div>
+          </div>
+          <p class="takeaway"><b>這一步不再產生向量：</b>向量已由上一頁算好；這裡負責保存並建立可搜尋的索引。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="查看 ChromaDB 儲存內容">
+        <header class="slide-header"><span class="section-label">Part 4 · ChromaDB</span><h2>ChromaDB 實際保存哪些資料</h2></header>
+        <div class="slide-body">
+          <p>ChromaDB 是向量資料庫。它不只保存 embedding，也會保存同一筆 chunk 的 ID、原文與 metadata，之後才能從相近向量找回可閱讀的資料。</p>
+          <pre><code>stored = vector_collection.get(
+    limit=2,
+    include=["documents", "metadatas", "embeddings"],
+)
+print(stored["ids"][0])
+print(stored["documents"][0][:120])
+print(stored["metadatas"][0])
+print(len(stored["embeddings"][0]))</code></pre>
+          <div class="two-col">
+            <div class="rule-block"><h3>用向量搜尋</h3><p><code>embeddings</code> 用來計算哪些 chunks 最接近問題。</p></div>
+            <div class="rule-block"><h3>把結果交還給人與 LLM</h3><p><code>documents</code> 提供原文，<code>metadatas</code> 提供檔名、頁碼等來源。</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="程式導覽：依問題檢索">
+        <header class="slide-header"><span class="section-label">Part 4 · Code 5/6</span><h2>檢索：用問題向量找回相關 chunks</h2></header>
+        <div class="slide-body">
+          <p>收到問題後，先用同一個 embedding 模型轉成向量，再請 ChromaDB 取回最接近的幾筆資料。</p>
+          <pre><code>query_embedding = self.embedding_manager.encode([query])[0]
+result = self.collection.query(
+    query_embeddings=[query_embedding.tolist()],
+    n_results=min(top_k, self.collection.count()),
+    include=["documents", "metadatas", "distances"],
+)</code></pre>
+          <div class="two-col">
+            <div class="rule-block"><h3>輸入</h3><p><code>query</code> 是使用者問題；<code>top_k</code> 決定最多取回幾段。</p></div>
+            <div class="rule-block"><h3>輸出</h3><p><code>documents[0][i]</code>、<code>metadatas[0][i]</code> 與 <code>distances[0][i]</code> 是同一名次的 chunk。程式依相同索引把它們合在一起。</p></div>
+          </div>
+          <p class="takeaway"><b>metadata 怎麼回來：</b>ChromaDB 找到第 i 個向量後，會一起回傳寫入時綁在同一筆資料上的原文與 metadata。距離較近仍不保證內容足以回答問題。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="2" aria-label="程式導覽：組合提示文字">
+        <header class="slide-header"><span class="section-label">Part 4 · Code 6/6</span><h2>組合 prompt：把問題與來源文字放在一起</h2></header>
+        <div class="slide-body">
+          <p><code>prepare_rag_input()</code> 會檢索 chunks、附上來源檔名與頁碼，再把它們和原問題組成提供給 LLM 的 prompt。</p>
+          <pre><code>rag_input = prepare_rag_input(
+    "How many grams of coffee and water are used in the example recipe?",
+    rag_retriever,
+    top_k=3,
+)
+print(rag_input["prompt"][:1800])</code></pre>
+          <div class="two-col">
+            <div class="rule-block"><h3>輸入</h3><p>問題、檢索器，以及要取回的 chunk 數量。</p></div>
+            <div class="rule-block"><h3>輸出</h3><p><code>rag_input["prompt"]</code> 包含問題、取回的原文和來源標記。</p></div>
+          </div>
+          <p class="takeaway"><b>到這裡：</b>notebook 預設只印出 prompt，沒有自動呼叫外部 LLM；生成答案是後面的選用步驟。</p>
+        </div>
+      </section>
+
+      <section class="slide chapter-slide" data-minutes="0" aria-label="第五章開場：RAG 與外部工具">
+        <div class="chapter-content">
+          <p class="chapter-kicker">PART 5</p>
+          <span class="chapter-index" aria-hidden="true">05</span>
+          <h2>RAG 與外部工具</h2>
+          <p class="chapter-lead">區分 RAG、MCP 與 Agent 的角色，再看資料可以部署在哪裡，以及 PDF 以外的內容如何加入檢索。</p>
+          <div class="chapter-topics" aria-label="本章主題"><span>RAG</span><span>MCP</span><span>Agent</span><span>Cloud</span><span>Multimodal</span></div>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="3" aria-label="RAG MCP Agent 比較">
+        <header class="slide-header"><span class="section-label">Part 5 · Concepts</span><h2>RAG、MCP、Agent 分別解決什麼問題</h2></header>
+        <div class="slide-body">
+          <div class="table-wrap"><table>
+            <thead><tr><th>名稱</th><th>它是什麼</th><th>在系統中的工作</th></tr></thead>
+            <tbody>
+              <tr><td>RAG</td><td>先檢索資料，再把相關內容提供給模型的流程</td><td>讓回答能使用外部知識與可追溯的來源</td></tr>
+              <tr><td>MCP</td><td>讓 AI 應用連接外部工具與資料來源的標準介面</td><td>統一描述可使用的工具、資源與呼叫方式</td></tr>
+              <tr><td>Agent</td><td>帶有 instructions 與 tools，並可反覆選擇下一步的執行方式</td><td>判斷何時檢索、何時呼叫工具，以及何時輸出答案</td></tr>
+            </tbody>
+          </table></div>
+          <div class="note"><span class="box-label">不是三選一</span><p>Agent 可以使用 RAG 工具，也可以透過 MCP 連接其他系統。RAG 也能被包成一個 MCP tool，但 RAG 本身不一定需要 MCP。</p></div>
+        </div>
+      </section>
+
+      <section class="slide integration-slide" data-minutes="3" aria-label="Agent 結合 RAG 與 MCP">
+        <header class="slide-header"><span class="section-label">Part 5 · Integration</span><h2>Agent 可以在需要時呼叫 RAG</h2></header>
+        <div class="slide-body">
+          <p>Agent 先讀取問題，再選擇要不要使用工具。若問題需要課程文件，它可以呼叫 RAG；若要查其他系統，也可以透過 MCP 連接對應工具。</p>
+          <figure><div class="figure">
+            <div class="flow-row"><span class="node">使用者問題</span><span class="arrow">→</span><span class="node">Agent</span><span class="arrow">→</span><span class="node">選擇工具</span></div>
+            <div class="stage-figure" style="margin-top:18px">
+              <div><div class="stage-label">需要文件內容</div><p class="example-question">例：課程作業要繳交什麼格式？</p><div class="flow-col"><span class="node">RAG retrieval</span><span class="down">↓</span><span class="node">Vector DB</span><span class="down">↓</span><span class="node">相關 chunks</span></div></div>
+              <div><div class="stage-label">需要外部系統</div><p class="example-question">例：現在台北的天氣如何？</p><div class="flow-col"><span class="node">MCP 天氣查詢工具</span><span class="down">↓</span><span class="node">天氣資料服務</span><span class="down">↓</span><span class="node">工具結果</span></div></div>
+            </div>
+          </div><figcaption>兩條路徑都把結果交回 Agent。Agent 再根據問題、文件內容或工具結果，決定下一步或產生回答。</figcaption></figure>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="3" aria-label="RAG 雲端部署位置">
+        <header class="slide-header"><span class="section-label">Part 5 · Deployment</span><h2>RAG 可以部署在哪裡</h2></header>
+        <div class="slide-body">
+          <div class="table-wrap"><table>
+            <thead><tr><th>情境</th><th>原始文件</th><th>向量與 metadata</th><th>執行檢索的程式</th></tr></thead>
+            <tbody>
+              <tr><td>本機練習</td><td>電腦資料夾</td><td>本機 ChromaDB</td><td>Notebook 或本機程式</td></tr>
+              <tr><td>應用程式後端</td><td>伺服器磁碟或物件儲存</td><td>持久化的 vector database</td><td>後端 API 服務</td></tr>
+              <tr><td>雲端服務</td><td>雲端物件儲存</td><td>託管式 vector database 或支援向量搜尋的資料庫</td><td>雲端運算服務或 Agent</td></tr>
+            </tbody>
+          </table></div>
+          <div class="two-col">
+            <div class="rule-block"><h3>搬到雲端時不變的部分</h3><p>仍然要載入、切段、建立 embedding、保存原文與來源，再依問題檢索。</p></div>
+            <div class="rule-block"><h3>需要另外決定的部分</h3><p>資料放在哪裡、誰可以存取、索引何時更新，以及服務能承受多少使用者。</p></div>
+          </div>
+          <p class="takeaway"><b>RAG 是一套流程：</b>它可以完全在本機，也可以把儲存、檢索與生成分散到不同的雲端服務。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="3" aria-label="多模態與不同檔案格式">
+        <header class="slide-header"><span class="section-label">Part 5 · Data formats</span><h2>RAG 不只處理文字型 PDF</h2></header>
+        <div class="slide-body">
+          <div class="table-wrap"><table>
+            <thead><tr><th>資料</th><th>建立索引前先做什麼</th><th>建議保留的來源資訊</th></tr></thead>
+            <tbody>
+              <tr><td>PDF、Word、網頁</td><td>抽取文字，再依標題或長度切段</td><td>檔名、頁碼、網址、標題</td></tr>
+              <tr><td>圖片或掃描 PDF</td><td>用 OCR 讀文字，或產生圖片描述與影像 embedding</td><td>檔名、頁碼、圖片位置</td></tr>
+              <tr><td>音訊</td><td>語音轉文字，再切成可檢索的片段</td><td>檔名、開始與結束時間</td></tr>
+              <tr><td>影片</td><td>轉錄語音，必要時擷取畫面或產生畫面描述</td><td>檔名、時間點、畫面位置</td></tr>
+            </tbody>
+          </table></div>
+          <figure><div class="figure"><div class="flow-row"><span class="node">不同格式</span><span class="arrow">→</span><span class="node">可檢索的片段</span><span class="arrow">→</span><span class="node">Embedding</span><span class="arrow">→</span><span class="node">Index</span><span class="arrow">→</span><span class="node">Top-k 結果</span></div></div></figure>
+          <p class="takeaway"><b>相同的是檢索概念，不同的是前處理：</b>系統必須先把每種格式轉成可搜尋的內容，並保留能回到原始資料的位置。</p>
+        </div>
+      </section>
+
+      <section class="slide" data-minutes="0" aria-label="程式碼段落轉場">
+        <header class="slide-header"><span class="section-label">接下來 · Notebook</span><h2>現在打開 notebook，走一次 RAG</h2></header>
+        <div class="slide-body">
+          <p class="lead">開啟 <code>pdf_loader_student.ipynb</code>，依照儲存格順序完成兩個階段。</p>
+          <figure><div class="figure stage-figure">
+            <div>
+              <div class="stage-label">Part 1 · 建立索引</div>
+              <div class="flow-col"><span class="node">載入 PDF</span><span class="down">↓</span><span class="node">切成 chunks</span><span class="down">↓</span><span class="node">產生向量並存入 ChromaDB</span></div>
+            </div>
+            <div>
+              <div class="stage-label">Part 2 · 查詢索引</div>
+              <div class="flow-col"><span class="node">輸入問題</span><span class="down">↓</span><span class="node">取回 Top-k chunks</span><span class="down">↓</span><span class="node">檢查原文與來源，組合 prompt</span></div>
+            </div>
+          </div></figure>
+          <div class="note"><span class="box-label">實作時</span><p>每完成一段，先看看輸出的文字、向量或檢索結果長什麼樣，再繼續執行下一段。</p></div>
+        </div>
+      </section>
+    </main>
+    <nav class="progress" aria-label="依頁面跳轉">
+      <div class="progress-rail" aria-hidden="true"><span id="progressFill"></span></div>
+      <div class="slide-dots" id="slideDots"></div>
+      <div class="slide-tooltip" id="slideTooltip" role="tooltip" aria-hidden="true"></div>
+    </nav>
+    <nav class="controls" aria-label="投影片控制">
+      <div class="group"><button id="previous" type="button" aria-label="上一頁">←</button><button id="next" type="button" aria-label="下一頁">→</button><span id="counter" aria-live="polite"></span></div>
+      <div class="group"><span class="small control-hint">← → / Space 切頁</span><button id="fullscreen" class="fullscreen-button" type="button" aria-label="進入全螢幕" aria-pressed="false" title="進入全螢幕播放">全螢幕</button></div>
+    </nav>
+  </div>
+  <noscript>本投影片需要 JavaScript 才能逐頁切換；完整文字教材可開啟 rag_course_slides.html。</noscript>
+  <script>
+    (() => {
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const counter = document.getElementById('counter');
+      const progress = document.getElementById('progressFill');
+      const slideDots = document.getElementById('slideDots');
+      const slideTooltip = document.getElementById('slideTooltip');
+      const progressNavigation = document.querySelector('.progress');
+      const previous = document.getElementById('previous');
+      const next = document.getElementById('next');
+      const deck = document.querySelector('.deck');
+      const fullscreen = document.getElementById('fullscreen');
+      const pythonPattern = /(#.*$)|((?:[rubfRUBF]{0,2})(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'))|(\b(?:False|None|True|and|as|assert|async|await|break|case|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|match|nonlocal|not|or|pass|raise|return|try|while|with|yield)\b)|(\b(?:Counter|Document|dict|enumerate|float|int|len|list|max|min|print|range|reversed|set|sorted|str|sum|tuple|type|zip)\b)|(\b\d+(?:\.\d+)?\b)|([+\-*\/%=<>!&|^~:]+)|(\b[A-Za-z_]\w*(?=\s*\())/gm;
+      const tokenClasses = ['token-comment','token-string','token-keyword','token-builtin','token-number','token-operator','token-function'];
+      function highlightPython(code) {
+        const source = code.textContent;
+        if (!/\b(?:from|for|in|lambda|print|self|import)\b|=|\.\w+\(/.test(source)) return;
+        const fragment = document.createDocumentFragment();
+        let cursor = 0;
+        for (const match of source.matchAll(pythonPattern)) {
+          fragment.append(document.createTextNode(source.slice(cursor, match.index)));
+          const tokenIndex = match.slice(1).findIndex(Boolean);
+          const span = document.createElement('span');
+          span.className = tokenClasses[tokenIndex];
+          span.textContent = match[0];
+          fragment.append(span);
+          cursor = match.index + match[0].length;
+        }
+        fragment.append(document.createTextNode(source.slice(cursor)));
+        code.replaceChildren(fragment);
+        code.classList.add('language-python');
+      }
+      document.querySelectorAll('pre code').forEach(highlightPython);
+      slides.forEach((slide, position) => {
+        slide.dataset.slideNumber = String(position + 1).padStart(2, '0');
+        const heading = slide.querySelector('h1, h2');
+        const coverLines = Array.from(slide.querySelectorAll('.cover-title-main'));
+        const title = coverLines.length
+          ? coverLines.map(line => line.textContent.trim()).join(' ')
+          : (heading?.textContent.trim() || slide.getAttribute('aria-label') || '未命名頁面');
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'slide-dot';
+        dot.dataset.title = (position + 1) + '. ' + title;
+        dot.setAttribute('aria-label', '跳至第 ' + (position + 1) + ' 頁：' + title);
+        dot.addEventListener('click', () => show(position));
+        dot.addEventListener('mouseenter', () => showSlideTooltip(dot));
+        dot.addEventListener('mouseleave', hideSlideTooltip);
+        dot.addEventListener('focus', () => showSlideTooltip(dot));
+        dot.addEventListener('blur', hideSlideTooltip);
+        slideDots.appendChild(dot);
+      });
+      document.querySelectorAll('[data-slide-target]').forEach(link => {
+        link.addEventListener('click', event => {
+          const targetLabel = link.getAttribute('data-slide-target');
+          const targetIndex = slides.findIndex(slide => slide.getAttribute('aria-label') === targetLabel);
+          if (targetIndex < 0) return;
+          event.preventDefault();
+          show(targetIndex);
+        });
+      });
+      const dots = Array.from(slideDots.querySelectorAll('.slide-dot'));
+      let current = 0;
+      let tooltipTarget = null;
+      function showSlideTooltip(dot) {
+        tooltipTarget = dot;
+        slideTooltip.textContent = dot.dataset.title;
+        slideTooltip.classList.add('is-visible');
+        slideTooltip.setAttribute('aria-hidden', 'false');
+        const navigationRect = progressNavigation.getBoundingClientRect();
+        const dotRect = dot.getBoundingClientRect();
+        const tooltipWidth = slideTooltip.getBoundingClientRect().width;
+        const dotCenter = dotRect.left + dotRect.width / 2 - navigationRect.left;
+        const edgeGap = 12;
+        const minimumCenter = tooltipWidth / 2 + edgeGap;
+        const maximumCenter = navigationRect.width - tooltipWidth / 2 - edgeGap;
+        const tooltipCenter = Math.max(minimumCenter, Math.min(dotCenter, maximumCenter));
+        const arrowPosition = dotCenter - (tooltipCenter - tooltipWidth / 2);
+        slideTooltip.style.left = tooltipCenter + 'px';
+        slideTooltip.style.setProperty('--arrow-x', arrowPosition + 'px');
+      }
+      function hideSlideTooltip() {
+        tooltipTarget = null;
+        slideTooltip.classList.remove('is-visible');
+        slideTooltip.setAttribute('aria-hidden', 'true');
+      }
+      window.addEventListener('resize', () => {
+        if (tooltipTarget) showSlideTooltip(tooltipTarget);
+      });
+      function show(index) {
+        current = Math.max(0, Math.min(index, slides.length - 1));
+        slides.forEach((slide, position) => {
+          const active = position === current;
+          slide.classList.toggle('active', active);
+          slide.setAttribute('aria-hidden', String(!active));
+        });
+        slides[current].scrollTop = 0;
+        previous.disabled = current === 0;
+        next.disabled = current === slides.length - 1;
+        dots.forEach((dot, position) => {
+          dot.classList.toggle('is-past', position < current);
+          dot.classList.toggle('is-current', position === current);
+          if (position === current) dot.setAttribute('aria-current', 'page');
+          else dot.removeAttribute('aria-current');
+        });
+        counter.textContent = (current + 1) + ' / ' + slides.length;
+        progress.style.width = (slides.length === 1 ? 100 : current / (slides.length - 1) * 100) + '%';
+        history.replaceState(null, '', '#slide-' + (current + 1));
+      }
+      function fromHash() {
+        const match = location.hash.match(/^#slide-(\d+)$/);
+        show(match ? Number(match[1]) - 1 : 0);
+      }
+      previous.addEventListener('click', () => show(current - 1));
+      next.addEventListener('click', () => show(current + 1));
+      function syncFullscreen() {
+        const active = document.fullscreenElement === deck;
+        fullscreen.textContent = active ? '離開全螢幕' : '全螢幕';
+        fullscreen.setAttribute('aria-label', active ? '離開全螢幕' : '進入全螢幕');
+        fullscreen.setAttribute('aria-pressed', String(active));
+        fullscreen.title = active ? '按 Esc 可離開全螢幕' : '進入全螢幕播放';
+      }
+      fullscreen.addEventListener('click', async () => {
+        try {
+          if (document.fullscreenElement) await document.exitFullscreen();
+          else await deck.requestFullscreen();
+        } catch (error) {
+          fullscreen.title = '瀏覽器無法切換全螢幕';
+        }
+      });
+      document.addEventListener('fullscreenchange', syncFullscreen);
+      if (!deck.requestFullscreen || !document.exitFullscreen) fullscreen.hidden = true;
+      document.addEventListener('keydown', event => {
+        if (event.altKey || event.ctrlKey || event.metaKey) return;
+        if (event.target instanceof Element) {
+          if (event.target.closest('input, select, textarea, a')) return;
+          if (event.key === ' ' && event.target.closest('button')) return;
+        }
+        if (['ArrowRight', 'PageDown', ' '].includes(event.key)) { event.preventDefault(); show(current + 1); }
+        if (['ArrowLeft', 'PageUp'].includes(event.key)) { event.preventDefault(); show(current - 1); }
+        if (event.key === 'Home') { event.preventDefault(); show(0); }
+        if (event.key === 'End') { event.preventDefault(); show(slides.length - 1); }
+      });
+      window.addEventListener('hashchange', fromHash);
+      fromHash();
+    })();
+  </script>
+</body>
+</html>
