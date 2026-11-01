@@ -23,6 +23,10 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Copy `content/blog/_template.md`, rename it, and write the post in Markdown. Files beginning with `_` are treated as templates or drafts and are not published.
 
+## Writing a hobbies post
+
+Copy `content/hobbies/_template.md`, rename it with a lowercase English filename such as `weekend-photography.md`, and write the post in Markdown. It will appear automatically on `/hobbies` and use the filename as its article URL. Files beginning with `_` are treated as templates or drafts and are not published.
+
 ## Deployment
 
 Pushing to `main` automatically builds and deploys the site through GitHub Actions.

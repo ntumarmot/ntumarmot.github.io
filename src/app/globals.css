@@ -119,6 +119,11 @@ nav {
   border-bottom-color: var(--accent);
 }
 
+.nav-links .language-link {
+  color: var(--text);
+  font-weight: 600;
+}
+
 /* Headings --------------------------------------------------------- */
 h1 {
   font-size: 2rem;
@@ -126,6 +131,10 @@ h1 {
   letter-spacing: -0.025em;
   line-height: 1.15;
   margin-bottom: 0.4rem;
+}
+
+.name-native {
+  white-space: nowrap;
 }
 
 .section-title {
@@ -445,6 +454,604 @@ section {
   border-radius: 6px;
 }
 
+/* Seberon production-scheduling case study ------------------------ */
+.seberon-container {
+  max-width: 72rem;
+}
+
+.seberon-case {
+  --seberon-navy: #17324a;
+  --seberon-green: #326753;
+  --seberon-soft: color-mix(in srgb, var(--accent) 7%, var(--bg));
+  padding-bottom: 2rem;
+}
+
+.seberon-case h1 {
+  font-size: clamp(2.35rem, 6vw, 4.8rem);
+  line-height: 1.02;
+  letter-spacing: -0.055em;
+  margin-bottom: 1.35rem;
+}
+
+.seberon-case h2 {
+  font-size: clamp(1.65rem, 3vw, 2.45rem);
+  line-height: 1.16;
+  letter-spacing: -0.035em;
+  margin-bottom: 0.7rem;
+}
+
+.seberon-case h3 {
+  font-size: 1.12rem;
+  line-height: 1.35;
+}
+
+.seberon-subnav {
+  justify-content: flex-start;
+  gap: 0.35rem;
+  margin-bottom: 2.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.seberon-subnav a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0.35rem 0.8rem;
+  color: var(--muted);
+  border-radius: 999px;
+  text-decoration: none;
+}
+
+.seberon-subnav a:hover,
+.seberon-subnav a[aria-current="page"] {
+  color: var(--text);
+  background: var(--seberon-soft);
+}
+
+.seberon-subnav a[aria-current="page"] {
+  font-weight: 600;
+}
+
+.seberon-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(18rem, 0.88fr);
+  gap: clamp(2rem, 5vw, 4.5rem);
+  align-items: end;
+  margin-bottom: 5.5rem;
+  padding: clamp(2.5rem, 7vw, 5.5rem);
+  overflow: hidden;
+  color: #fff;
+  border-radius: 1.5rem;
+  background: #211f1c;
+}
+
+.seberon-hero-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.seberon-eyebrow {
+  margin-bottom: 0.8rem;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.seberon-hero .seberon-eyebrow,
+.seberon-contribution-hero .seberon-eyebrow {
+  color: #efad81;
+}
+
+.seberon-lead {
+  max-width: 43rem;
+  color: color-mix(in srgb, currentColor 82%, transparent);
+  font-size: clamp(1.05rem, 2vw, 1.3rem);
+  line-height: 1.7;
+}
+
+.seberon-meta {
+  margin-top: 1.5rem;
+  color: #bcb5ab;
+  font-size: 0.9rem;
+}
+
+.seberon-hero-image {
+  align-self: stretch;
+  min-height: 20rem;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+.seberon-hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.seberon-section {
+  margin-bottom: 5.5rem;
+  scroll-margin-top: 1.5rem;
+}
+
+.seberon-section-heading {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 48rem);
+  gap: 1.4rem;
+  align-items: start;
+  margin-bottom: 2rem;
+}
+
+.seberon-section-heading > span {
+  padding-top: 0.35rem;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.seberon-section-heading p {
+  color: var(--muted);
+  font-size: 1.03rem;
+}
+
+.seberon-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.seberon-stat {
+  display: flex;
+  min-width: 0;
+  min-height: 11rem;
+  flex-direction: column;
+  padding: 1.35rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--bg) 88%, var(--text) 2%);
+}
+
+.seberon-stat strong {
+  margin-bottom: 0.65rem;
+  color: var(--accent);
+  font-size: clamp(1.65rem, 3vw, 2.35rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.seberon-stat span {
+  font-weight: 600;
+}
+
+.seberon-stat small {
+  margin-top: auto;
+  padding-top: 0.65rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.seberon-note {
+  margin-top: 1rem;
+  color: var(--faint);
+  font-size: 0.82rem;
+}
+
+.seberon-card-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.seberon-card-grid.three-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.seberon-card-grid.four-columns {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.seberon-card {
+  min-width: 0;
+  padding: 1.45rem;
+  border-top: 2px solid var(--rule);
+  background: color-mix(in srgb, var(--bg) 94%, var(--accent) 2%);
+}
+
+.seberon-card h3 {
+  margin-bottom: 0.7rem;
+}
+
+.seberon-card-number {
+  display: inline-grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-bottom: 1.2rem;
+  place-items: center;
+  color: var(--bg);
+  border-radius: 0.55rem;
+  background: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.seberon-card p {
+  color: var(--muted);
+  font-size: 0.93rem;
+}
+
+.seberon-pill {
+  display: inline-block;
+  margin-bottom: 1rem;
+  padding: 0.25rem 0.6rem;
+  color: var(--accent);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.seberon-figure-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.seberon-case figure {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: 0.85rem;
+  background: var(--bg);
+}
+
+.seberon-case figure img {
+  display: block;
+  width: 100%;
+  height: 19rem;
+  object-fit: cover;
+}
+
+.seberon-case figure:first-child img {
+  object-fit: contain;
+  padding: 1rem;
+  background: #fff;
+}
+
+.seberon-case figcaption {
+  padding: 0.75rem 1rem;
+  color: var(--muted);
+  border-top: 1px solid var(--rule);
+  font-size: 0.82rem;
+}
+
+.seberon-flow-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+
+.seberon-flow-list li {
+  display: grid;
+  grid-template-columns: 10rem minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.seberon-flow-list li > span {
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.seberon-flow-list h3 {
+  margin-bottom: 0.35rem;
+}
+
+.seberon-flow-list p {
+  max-width: 48rem;
+  color: var(--muted);
+}
+
+.seberon-definition-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.seberon-definition-list > div {
+  padding: 1.35rem;
+  border-left: 2px solid var(--accent);
+  background: var(--seberon-soft);
+}
+
+.seberon-definition-list h3 {
+  margin-bottom: 0.4rem;
+}
+
+.seberon-definition-list p {
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.seberon-output-grid,
+.seberon-boundary,
+.seberon-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.seberon-output-grid > article,
+.seberon-boundary > div,
+.seberon-evidence-grid > article {
+  min-width: 0;
+  padding: 1.6rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.85rem;
+}
+
+.seberon-output-grid h3,
+.seberon-boundary h2,
+.seberon-evidence-grid h3 {
+  margin-bottom: 0.75rem;
+}
+
+.seberon-output-grid ul {
+  padding-left: 1.2rem;
+  color: var(--muted);
+}
+
+.seberon-output-grid li {
+  margin-bottom: 0.45rem;
+}
+
+.seberon-boundary {
+  margin-bottom: 2rem;
+}
+
+.seberon-boundary > div:first-child {
+  border-color: color-mix(in srgb, var(--seberon-green) 35%, var(--rule));
+  background: color-mix(in srgb, var(--seberon-green) 8%, var(--bg));
+}
+
+.seberon-boundary > div:last-child {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--rule));
+  background: var(--seberon-soft);
+}
+
+.seberon-boundary h2 {
+  font-size: 1.2rem;
+  letter-spacing: -0.01em;
+}
+
+.seberon-boundary p,
+.seberon-evidence-grid p {
+  color: var(--muted);
+}
+
+.seberon-contribution-hero {
+  margin-bottom: 5.5rem;
+  padding: clamp(2.5rem, 7vw, 5.5rem);
+  color: #fff;
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(circle at 86% 15%, rgb(180 80 42 / 42%), transparent 20rem),
+    linear-gradient(135deg, #211f1c, var(--seberon-navy));
+}
+
+.seberon-contribution-hero .seberon-lead {
+  max-width: 56rem;
+}
+
+.seberon-context-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.seberon-context-grid article {
+  min-width: 0;
+  padding: 1.45rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--bg) 94%, var(--accent) 2%);
+}
+
+.seberon-context-grid span {
+  display: block;
+  margin-bottom: 1rem;
+  color: var(--accent);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.seberon-context-grid h3 {
+  margin-bottom: 0.55rem;
+}
+
+.seberon-context-grid p {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.seberon-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.seberon-timeline li {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1.4rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.seberon-timeline li > time {
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.seberon-timeline h3 {
+  margin-bottom: 0.35rem;
+}
+
+.seberon-timeline p {
+  max-width: 48rem;
+  color: var(--muted);
+}
+
+.seberon-contribution-list {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.seberon-contribution {
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--bg) 96%, var(--accent) 1%);
+}
+
+.seberon-contribution > header {
+  display: grid;
+  grid-template-columns: 2.7rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+  margin: 0;
+  padding: 1.35rem 1.5rem;
+  color: #fff;
+  background: var(--seberon-navy);
+}
+
+.seberon-contribution > header > span {
+  display: grid;
+  width: 2.7rem;
+  height: 2.7rem;
+  place-items: center;
+  color: var(--seberon-navy);
+  border-radius: 0.65rem;
+  background: #efad81;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.seberon-contribution > header h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.2rem;
+}
+
+.seberon-contribution > header p {
+  color: #cfc9c0;
+  font-size: 0.86rem;
+}
+
+.seberon-contribution-body {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.seberon-contribution-body > div {
+  min-width: 0;
+  padding: 1.45rem;
+}
+
+.seberon-contribution-body > div + div {
+  border-left: 1px solid var(--rule);
+}
+
+.seberon-contribution h4 {
+  margin-bottom: 0.55rem;
+  color: var(--accent);
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+}
+
+.seberon-contribution-body p {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.seberon-contribution aside {
+  margin: 0 1.45rem 1.45rem;
+  padding: 1rem 1.1rem;
+  color: color-mix(in srgb, var(--seberon-green) 90%, var(--text));
+  border-left: 3px solid var(--seberon-green);
+  background: color-mix(in srgb, var(--seberon-green) 8%, var(--bg));
+}
+
+.seberon-contribution aside strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.82rem;
+}
+
+.seberon-contribution aside p {
+  font-size: 0.92rem;
+}
+
+.seberon-evidence-grid code {
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: 0.88em;
+}
+
+.seberon-resume-line {
+  margin: 0 0 2rem;
+  padding: 1.5rem;
+  color: var(--text);
+  border-left: 4px solid var(--accent);
+  background: var(--seberon-soft);
+  font-size: clamp(1.15rem, 2.5vw, 1.55rem);
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .seberon-hero { grid-template-columns: 1fr; }
+  .seberon-hero-image { min-height: 15rem; }
+  .seberon-stat-grid,
+  .seberon-card-grid.four-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .seberon-card-grid.three-columns,
+  .seberon-context-grid,
+  .seberon-contribution-body { grid-template-columns: 1fr; }
+  .seberon-contribution-body > div + div { border-top: 1px solid var(--rule); border-left: 0; }
+}
+
+@media (max-width: 640px) {
+  .seberon-subnav { display: grid; grid-template-columns: 1fr 1fr; }
+  .seberon-subnav a:last-child { grid-column: auto; }
+  .seberon-hero,
+  .seberon-contribution-hero { margin-bottom: 4rem; padding: 2rem 1.35rem; border-radius: 1rem; }
+  .seberon-case h1 { font-size: clamp(2.1rem, 12vw, 3.2rem); }
+  .seberon-section { margin-bottom: 4rem; }
+  .seberon-section-heading { grid-template-columns: 1fr; gap: 0.45rem; }
+  .seberon-stat-grid,
+  .seberon-card-grid.four-columns,
+  .seberon-figure-grid,
+  .seberon-definition-list,
+  .seberon-output-grid,
+  .seberon-boundary,
+  .seberon-evidence-grid { grid-template-columns: 1fr; }
+  .seberon-stat { min-height: 9rem; }
+  .seberon-flow-list li,
+  .seberon-timeline li { grid-template-columns: 1fr; gap: 0.45rem; }
+  .seberon-case figure img { height: auto; }
+  .seberon-contribution > header { grid-template-columns: 1fr; }
+}
+
 /* Footer ----------------------------------------------------------- */
 footer {
   padding: 2.5rem 0;
@@ -643,9 +1250,69 @@ body.dark.party {
   html { font-size: calc(15px * var(--font-scale, 1)); }
   h1 { font-size: 1.7rem; }
   .container { padding: 0 1.25rem; }
-  header { padding-top: 3.25rem; }
-  .controls { top: 12px; right: 12px; gap: 8px; }
-  .style-switch button { padding: 0 8px; }
+
+  /* Keep the controls in normal document flow on narrow screens. This
+     prevents the fixed cluster from extending past the viewport when text
+     scaling is increased. */
+  .controls {
+    position: static;
+    width: 100%;
+    padding: 0.75rem 1.25rem 0;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .style-switch button,
+  .font-control button {
+    min-width: 44px;
+    height: 44px;
+    padding: 0 10px;
+  }
+
+  .toggle {
+    width: 48px;
+    height: 44px;
+  }
+
+  .toggle .slider {
+    inset: 12px 6px;
+  }
+
+  header {
+    padding-top: 1rem;
+    margin-bottom: 2.5rem;
+  }
+
+  nav {
+    align-items: flex-start;
+  }
+
+  .nav-links {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    gap: 0.25rem 1rem;
+  }
+
+  .nav-links a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  main,
+  section,
+  .experience-item {
+    min-width: 0;
+  }
+
+  .links a,
+  .post-title,
+  .post-body {
+    overflow-wrap: anywhere;
+  }
 }
 
 

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { SiteLocale } from "@/lib/i18n";
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ locale = "en" }: { locale?: SiteLocale }) {
   const [dark, setDark] = useState(false);
 
   // Sync with the class set pre-paint in layout.
@@ -15,7 +16,7 @@ export default function ThemeToggle() {
   };
 
   return (
-    <label className="toggle" aria-label="Toggle dark mode">
+    <label className="toggle" aria-label={locale === "zh" ? "切換深色模式" : "Toggle dark mode"}>
       <input type="checkbox" checked={dark} onChange={toggle} />
       <span className="slider" />
     </label>

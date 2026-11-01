@@ -7,6 +7,8 @@ import { marked } from "marked";
 
 const BLOG_DIR = path.join(process.cwd(), "content/blog");
 
+export type BlogLocale = "zh" | "en";
+
 export type Post = {
   slug: string;
   title: string;
@@ -41,25 +43,32 @@ function parse(file: string): Omit<Post, "slug"> {
   };
 }
 
-export function getPosts(): Post[] {
-  if (!fs.existsSync(BLOG_DIR)) return [];
+export function getPosts(locale: BlogLocale = "zh"): Post[] {
+  const directory = locale === "en" ? path.join(BLOG_DIR, "en") : BLOG_DIR;
+  if (!fs.existsSync(directory)) return [];
   return fs
-    .readdirSync(BLOG_DIR)
+    .readdirSync(directory)
     // Skip files starting with "_" — templates and drafts.
     .filter((f) => f.endsWith(".md") && !f.startsWith("_"))
-    .map((f) => ({ slug: f.replace(/\.md$/, ""), ...parse(path.join(BLOG_DIR, f)) }))
+    .map((f) => ({ slug: f.replace(/\.md$/, ""), ...parse(path.join(directory, f)) }))
     .sort((a, b) => b.date.localeCompare(a.date));
 }
 
-export function getPost(slug: string): Post | undefined {
-  return getPosts().find((p) => p.slug === slug);
+export function getPost(
+  slug: string,
+  locale: BlogLocale = "zh",
+): Post | undefined {
+  return getPosts(locale).find((p) => p.slug === slug);
 }
 
-export function formatDate(date: string): string {
+export function formatDate(date: string, locale: BlogLocale = "zh"): string {
   if (!date) return "";
-  return new Date(date + "T00:00:00").toLocaleDateString("en-US", {
+  return new Date(date + "T00:00:00").toLocaleDateString(
+    locale === "zh" ? "zh-TW" : "en-US",
+    {
     year: "numeric",
     month: "long",
     day: "numeric",
-  });
+    },
+  );
 }

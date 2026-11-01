@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { SiteLocale } from "@/lib/i18n";
 
 // Text scale steps. Index 1 (1.0) is the default; matches the pre-paint
 // script in layout.tsx which applies the saved value before first render.
@@ -11,7 +12,8 @@ function apply(scale: number) {
   document.documentElement.style.setProperty("--font-scale", String(scale));
 }
 
-export default function FontSizeControl() {
+export default function FontSizeControl({ locale = "en" }: { locale?: SiteLocale }) {
+  const isZh = locale === "zh";
   const [idx, setIdx] = useState(DEFAULT);
 
   // Sync with whatever the pre-paint script already applied.
@@ -33,13 +35,13 @@ export default function FontSizeControl() {
   };
 
   return (
-    <div className="font-control" role="group" aria-label="Text size">
+    <div className="font-control" role="group" aria-label={isZh ? "文字大小" : "Text size"}>
       <button
         type="button"
         onClick={() => set(idx - 1)}
         disabled={idx === 0}
-        aria-label="Smaller text"
-        title="Smaller text"
+        aria-label={isZh ? "縮小文字" : "Smaller text"}
+        title={isZh ? "縮小文字" : "Smaller text"}
       >
         A<span className="font-control-minus">−</span>
       </button>
@@ -47,8 +49,8 @@ export default function FontSizeControl() {
         type="button"
         onClick={() => set(DEFAULT)}
         disabled={idx === DEFAULT}
-        aria-label="Reset text size"
-        title="Reset text size"
+        aria-label={isZh ? "重設文字大小" : "Reset text size"}
+        title={isZh ? "重設文字大小" : "Reset text size"}
       >
         A
       </button>
@@ -56,8 +58,8 @@ export default function FontSizeControl() {
         type="button"
         onClick={() => set(idx + 1)}
         disabled={idx === STEPS.length - 1}
-        aria-label="Larger text"
-        title="Larger text"
+        aria-label={isZh ? "放大文字" : "Larger text"}
+        title={isZh ? "放大文字" : "Larger text"}
       >
         A<span className="font-control-plus">+</span>
       </button>

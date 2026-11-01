@@ -1,5 +1,6 @@
 export const personalInfo = {
   name: "Yuan-Hsiang Huang",
+  nameZh: "黃元翔",
   nickname: "Oliver",
   title: "Information Management Student",
   subtitle: "Operations Research · Data Science · Software Engineering",
@@ -95,6 +96,7 @@ export const projects = [
     icon: "⚙️",
     github: null,
     demo: null,
+    caseStudy: "/projects/seberon",
   },
   {
     id: "ubike",
@@ -115,6 +117,7 @@ export const projects = [
     icon: "🚲",
     github: null,
     demo: null,
+    caseStudy: null,
   },
   {
     id: "hci-research",
@@ -135,6 +138,7 @@ export const projects = [
     icon: "🗺️",
     github: null,
     demo: null,
+    caseStudy: null,
   },
   {
     id: "bible-reader",
@@ -155,6 +159,7 @@ export const projects = [
     icon: "📖",
     github: "https://github.com/ntumarmot/bible-web-app",
     demo: "https://ntumarmot.github.io/bible-web-app/",
+    caseStudy: null,
   },
 ];
 

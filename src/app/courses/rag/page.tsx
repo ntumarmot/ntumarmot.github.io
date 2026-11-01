@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "RAG Course | Yuan-Hsiang (Oliver) Huang",
   description:
     "繁體中文 RAG 社課：從 PDF 文件、文字切割、embedding 到向量檢索，附投影片與學生練習教材。",
+  alternates: { languages: { en: "/en/courses/rag", "zh-Hant": "/courses/rag" } },
 };
 
 const lessons = [
@@ -18,7 +19,7 @@ const lessons = [
 export default function RagCoursePage() {
   return (
     <article className="course-detail" lang="zh-Hant">
-      <p className="course-back"><Link href="/courses">← 所有課程</Link></p>
+      <p className="course-back"><Link href="/courses">← 所有課程</Link> · <Link href="/en/courses/rag" hrefLang="en">English</Link></p>
       <span className="exp-date">
         <time dateTime="2026-10-19">2026/10/19</time> · NTU AI Club · RAG 技術社課
       </span>

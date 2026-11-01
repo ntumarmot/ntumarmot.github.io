@@ -9,11 +9,11 @@ export default function CoursesLayout({
 }) {
   return (
     <>
-      <Controls />
+      <Controls locale="zh" />
       <div className="container">
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
+        <Navbar locale="zh" languageHref="/en/courses" />
+        <main lang="zh-Hant">{children}</main>
+        <Footer locale="zh" />
       </div>
     </>
   );

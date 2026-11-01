@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { SiteLocale } from "@/lib/i18n";
 
 // Visual style: "modern" (warm-humanist sans) is the default and needs no
 // class; "classic" (Cinzel / Cormorant, parchment) adds body.theme-classic.
@@ -8,7 +9,8 @@ import { useEffect, useState } from "react";
 // first render.
 type Style = "classic" | "modern";
 
-export default function StyleSwitch() {
+export default function StyleSwitch({ locale = "en" }: { locale?: SiteLocale }) {
+  const isZh = locale === "zh";
   const [style, setStyle] = useState<Style>("modern");
 
   useEffect(() => {
@@ -24,22 +26,22 @@ export default function StyleSwitch() {
   };
 
   return (
-    <div className="style-switch" role="group" aria-label="Visual style">
+    <div className="style-switch" role="group" aria-label={isZh ? "視覺風格" : "Visual style"}>
       <button
         type="button"
         onClick={() => set("modern")}
         aria-pressed={style === "modern"}
-        title="Modern sans style"
+        title={isZh ? "現代無襯線風格" : "Modern sans style"}
       >
-        Modern
+        {isZh ? "現代" : "Modern"}
       </button>
       <button
         type="button"
         onClick={() => set("classic")}
         aria-pressed={style === "classic"}
-        title="Classic serif style"
+        title={isZh ? "經典襯線風格" : "Classic serif style"}
       >
-        Classic
+        {isZh ? "經典" : "Classic"}
       </button>
     </div>
   );

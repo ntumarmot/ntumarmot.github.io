@@ -1,27 +1,24 @@
 ---
 title: Hello, world
 date: 2026-07-01
-description: A first note — why I started this blog and what I plan to write about.
+description: 第一篇文章：我為什麼開始寫 Blog，以及之後想記錄哪些內容。
 ---
 
-This is my first post. I'll use this space to write about the things I spend my
-time on: **operations research**, data science, and the occasional side project.
+這是我的第一篇文章。我會在這裡記錄平常投入時間研究的主題，包括**作業研究**、資料科學，以及偶爾做的 Side Project。
 
-## Why write?
+## 為什麼要寫？
 
-Writing forces me to actually understand a thing. If I can't explain a MIP
-formulation or a clustering result in plain words, I probably don't understand
-it yet.
+寫作會迫使我真正理解一件事。如果我沒有辦法用白話說清楚一個 MIP 模型或分群結果，那我大概還沒有真的理解它。
 
-Some topics I want to cover:
+我想記錄的主題包括：
 
-- Modeling tricks I pick up while working with Gurobi
-- Notes from courses — algorithms, databases, networking
-- Small tools I build and what I learned making them
+- 使用 Gurobi 時學到的建模技巧
+- 演算法、資料庫與計算機網路等課程筆記
+- 自己做的小工具，以及開發過程中學到的事情
 
-## A tiny code sample
+## 一小段程式碼範例
 
-Markdown code blocks just work:
+Markdown 可以直接顯示程式碼區塊：
 
 ```python
 def greet(name: str) -> str:
@@ -30,6 +27,6 @@ def greet(name: str) -> str:
 print(greet("world"))
 ```
 
-> The best way to learn is to build, break, and write it down.
+> 最好的學習方式，就是動手做、把它弄壞，再把學到的事情寫下來。
 
-More soon.
+之後會再更新。

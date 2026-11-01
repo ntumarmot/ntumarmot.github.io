@@ -1,8 +1,9 @@
 "use client";
 
 import { personalInfo } from "@/lib/data";
+import type { SiteLocale } from "@/lib/i18n";
 
-export default function Footer() {
+export default function Footer({ locale = "en" }: { locale?: SiteLocale }) {
   return (
     <footer>
       <p>
@@ -15,7 +16,7 @@ export default function Footer() {
             document.body.classList.toggle("party");
           }}
         >
-          party?
+          {locale === "zh" ? "彩蛋？" : "party?"}
         </a>
       </p>
     </footer>

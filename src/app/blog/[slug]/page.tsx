@@ -15,8 +15,14 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = getPost(slug);
   return {
-    title: post ? `${post.title} | Oliver Huang` : "Blog | Oliver Huang",
+    title: post ? `${post.title} | 黃元翔` : "文章 | 黃元翔",
     description: post?.description,
+    alternates: {
+      languages: {
+        en: `/en/blog/${slug}`,
+        "zh-Hant": `/blog/${slug}`,
+      },
+    },
   };
 }
 
@@ -38,7 +44,11 @@ export default async function PostPage({
         dangerouslySetInnerHTML={{ __html: post.html }}
       />
       <p className="links">
-        <Link href="/blog">← All posts</Link>
+        <Link href="/blog">← 所有文章</Link>
+        {"  ·  "}
+        <Link href={`/en/blog/${slug}`} hrefLang="en">
+          Read in English
+        </Link>
       </p>
     </article>
   );

@@ -5,12 +5,13 @@ export const metadata: Metadata = {
   title: "Idea Lab AI 助理課程 | Yuan-Hsiang (Oliver) Huang",
   description:
     "臺灣金融研訓院 Idea Lab AI 助理課程：無程式碼助理、ChatGPT Work、文件與表格示範，以及人工覆核。",
+  alternates: { languages: { en: "/en/courses/idealab", "zh-Hant": "/courses/idealab" } },
 };
 
 export default function IdeaLabCoursePage() {
   return (
     <article className="course-detail" lang="zh-Hant">
-      <p className="course-back"><Link href="/courses">← 所有課程</Link></p>
+      <p className="course-back"><Link href="/courses">← 所有課程</Link> · <Link href="/en/courses/idealab" hrefLang="en">English</Link></p>
       <span className="exp-date">
         <time dateTime="2026-07-27">2026/07/27</time>、
         <time dateTime="2026-07-31">2026/07/31</time> · 臺灣金融研訓院 Idea Lab

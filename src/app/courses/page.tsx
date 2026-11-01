@@ -2,15 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Courses | Yuan-Hsiang (Oliver) Huang",
-  description: "Courses and teaching materials by Oliver Huang.",
+  title: "課程 | 黃元翔（Oliver Huang）",
+  description: "黃元翔的授課內容與教材。",
+  alternates: { languages: { en: "/en/courses", "zh-Hant": "/courses" } },
 };
 
 export default function CoursesPage() {
   return (
     <section aria-labelledby="courses-title">
-      <h1 id="courses-title">Courses</h1>
-      <p className="subtitle">Courses I have taught, with materials you can explore.</p>
+      <h1 id="courses-title">課程</h1>
+      <p className="subtitle">我曾經講授的課程，以及可以直接閱讀或下載的教材。</p>
 
       <div className="post-list">
         <Link href="/courses/rag" className="post-item">
