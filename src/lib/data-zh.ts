@@ -54,6 +54,7 @@ export const experienceZh = [
     bullets: [
       "協助超過 60 位幾乎沒有程式經驗的大一學生，建立 C++ 程式設計與解題基礎。",
     ],
+    resourceUrl: "https://github.com/ntumarmot/PD-tutorials",
   },
   {
     org: "臺大人工智慧研究社",

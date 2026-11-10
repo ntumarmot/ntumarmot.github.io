@@ -54,6 +54,7 @@ export const experience = [
     bullets: [
       "Supported more than 60 first-year students with little to no prior programming experience in building foundational C++ programming and problem-solving skills.",
     ],
+    resourceUrl: "https://github.com/ntumarmot/PD-tutorials",
   },
   {
     org: "NTU AI Club",

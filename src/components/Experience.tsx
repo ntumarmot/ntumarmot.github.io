@@ -25,6 +25,13 @@ export default function Experience({ locale = "en" }: { locale?: SiteLocale }) {
               ))}
             </ul>
           )}
+          {"resourceUrl" in item && typeof item.resourceUrl === "string" && (
+            <p className="experience-resource">
+              <a href={item.resourceUrl} target="_blank" rel="noopener noreferrer">
+                {isZh ? "課程補充教材（GitHub）" : "Supplementary course materials (GitHub)"}
+              </a>
+            </p>
+          )}
         </div>
       ))}
     </section>
