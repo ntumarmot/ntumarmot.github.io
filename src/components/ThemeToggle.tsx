@@ -7,7 +7,12 @@ export default function ThemeToggle({ locale = "en" }: { locale?: SiteLocale }) 
   const [dark, setDark] = useState(false);
 
   // Sync with the class set pre-paint in layout.
-  useEffect(() => setDark(document.body.classList.contains("dark")), []);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setDark(document.body.classList.contains("dark"));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   const toggle = () => {
     const d = document.body.classList.toggle("dark");

@@ -10,14 +10,17 @@ export default function Projects({ locale = "en" }: { locale?: SiteLocale }) {
     <section id="projects">
       <h2 className="section-title">{isZh ? "精選專案" : "Selected work"}</h2>
 
-      {items.map((project) => (
+      {items.map((project, index) => (
         <div key={project.id} className="experience-item">
           <div className="exp-header">
             <span className="exp-date">
               {project.period} · {project.status}
             </span>
             <h3>
-              {project.icon} {project.title}
+              <span className="project-index" aria-hidden="true">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              {project.title}
             </h3>
           </div>
           <p className="exp-org">{project.subtitle}</p>

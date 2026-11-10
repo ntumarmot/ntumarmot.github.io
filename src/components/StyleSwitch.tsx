@@ -14,7 +14,10 @@ export default function StyleSwitch({ locale = "en" }: { locale?: SiteLocale }) 
   const [style, setStyle] = useState<Style>("modern");
 
   useEffect(() => {
-    setStyle(document.body.classList.contains("theme-classic") ? "classic" : "modern");
+    const frame = requestAnimationFrame(() => {
+      setStyle(document.body.classList.contains("theme-classic") ? "classic" : "modern");
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   const set = (s: Style) => {
@@ -31,9 +34,9 @@ export default function StyleSwitch({ locale = "en" }: { locale?: SiteLocale }) 
         type="button"
         onClick={() => set("modern")}
         aria-pressed={style === "modern"}
-        title={isZh ? "現代無襯線風格" : "Modern sans style"}
+        title={isZh ? "手帖風格" : "Notebook style"}
       >
-        {isZh ? "現代" : "Modern"}
+        {isZh ? "手帖" : "Notebook"}
       </button>
       <button
         type="button"

@@ -24,7 +24,7 @@ export default function Home() {
       <Controls />
       <div className="container">
         <Navbar />
-        <main>
+        <main className="home-main">
           <Hero />
           <About />
           <Projects />

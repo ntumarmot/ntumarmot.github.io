@@ -26,7 +26,7 @@ export default function ChineseHome() {
       <Controls locale="zh" />
       <div className="container">
         <Navbar locale="zh" />
-        <main>
+        <main className="home-main">
           <Hero locale="zh" />
           <About locale="zh" />
           <Projects locale="zh" />

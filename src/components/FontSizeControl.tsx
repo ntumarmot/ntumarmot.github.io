@@ -18,11 +18,13 @@ export default function FontSizeControl({ locale = "en" }: { locale?: SiteLocale
 
   // Sync with whatever the pre-paint script already applied.
   useEffect(() => {
+    let frame = 0;
     try {
       const saved = parseFloat(localStorage.getItem("fontScale") ?? "");
       const i = STEPS.indexOf(saved);
-      if (i !== -1) setIdx(i);
+      if (i !== -1) frame = requestAnimationFrame(() => setIdx(i));
     } catch {}
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   const set = (i: number) => {

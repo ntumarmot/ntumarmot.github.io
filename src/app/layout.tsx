@@ -22,7 +22,7 @@ const hanken = Hanken_Grotesk({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#faf8f4",
+  themeColor: "#f4f1e8",
 };
 
 export const metadata: Metadata = {
