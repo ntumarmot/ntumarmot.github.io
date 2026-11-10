@@ -1879,17 +1879,6 @@ h1 {
   transform: rotate(-0.6deg);
 }
 
-.callout::before {
-  content: "";
-  position: absolute;
-  top: -0.7rem;
-  left: 2.2rem;
-  width: 4.5rem;
-  height: 1.25rem;
-  background: color-mix(in srgb, var(--surface) 60%, transparent);
-  transform: rotate(2deg);
-}
-
 .links {
   position: relative;
   z-index: 1;
