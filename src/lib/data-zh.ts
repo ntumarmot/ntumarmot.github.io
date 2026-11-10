@@ -19,7 +19,7 @@ export const educationZh = [
     degree: "資訊管理學系理學士",
     period: "2023 年 9 月－2027 年 6 月",
     location: "臺灣臺北",
-    gpa: "4.03 / 4.30（大三）· 3.96 / 4.30（大二）",
+    gpa: "3.86 / 4.3 (overall)",
     courses: [
       "程式設計",
       "資料結構與演算法",
@@ -30,7 +30,7 @@ export const educationZh = [
       "線性代數",
       "統計學",
     ],
-    highlight: "計算機網路 A+（全班前 13%）· 統計學全班第一",
+    highlight: "擅長資料科學、作業研究、資訊檢索",
   },
 ];
 

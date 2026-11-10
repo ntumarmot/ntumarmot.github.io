@@ -19,7 +19,7 @@ export const education = [
     degree: "Bachelor of Science in Information Management",
     period: "Sep. 2023 – June 2027",
     location: "Taipei, Taiwan",
-    gpa: "4.03 / 4.30 (Junior) · 3.96 / 4.30 (Sophomore)",
+    gpa: "3.86 / 4.3 (overall)",
     courses: [
       "Programming Design",
       "Data Structure and Algorithm",
@@ -30,8 +30,7 @@ export const education = [
       "Linear Algebra",
       "Statistics",
     ],
-    highlight:
-      "A+ in Computer Networking (top 13% of class) · Top of the class in Statistics",
+    highlight: "Strengths in data science, operations research, and information retrieval",
   },
 ];
 
